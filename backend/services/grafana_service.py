@@ -1,0 +1,158 @@
+import logging
+import os
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List
+
+import httpx
+
+logger = logging.getLogger("aria.grafana")
+
+
+def _base_url() -> str:
+    return os.getenv("GRAFANA_URL", "").rstrip("/")
+
+
+def _loki_url() -> str:
+    return os.getenv("GRAFANA_LOKI_URL", "").rstrip("/")
+
+
+def _headers() -> Dict[str, str]:
+    token = os.getenv("GRAFANA_API_KEY", "")
+    return {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+
+
+def is_configured() -> bool:
+    return bool(os.getenv("GRAFANA_API_KEY") and _base_url())
+
+
+def _severity_from_state(state: str) -> str:
+    s = (state or "").lower()
+    if s in ("alerting", "firing", "error"):
+        return "ERROR"
+    if s in ("pending", "warning", "no_data", "nodata"):
+        return "WARN"
+    return "INFO"
+
+
+async def fetch_alerts(window_minutes: int = 10) -> List[Dict[str, Any]]:
+    """Fetch Grafana unified alerting alerts (Alertmanager-compatible endpoint)."""
+    if not is_configured():
+        return []
+
+    url = f"{_base_url()}/api/alertmanager/grafana/api/v2/alerts"
+    out: List[Dict[str, Any]] = []
+    try:
+        async with httpx.AsyncClient(timeout=15.0, verify=False) as client:
+            r = await client.get(url, headers=_headers())
+            if r.status_code == 404:
+                # Fallback to legacy alerts endpoint
+                r = await client.get(f"{_base_url()}/api/alerts", headers=_headers())
+            if r.status_code >= 400:
+                logger.warning(f"Grafana alerts API {r.status_code}: {r.text[:200]}")
+                return []
+            cutoff = datetime.now(timezone.utc) - timedelta(minutes=window_minutes)
+            for alert in r.json():
+                labels = alert.get("labels", {}) or {}
+                annotations = alert.get("annotations", {}) or {}
+                status = alert.get("status", {})
+                state = status.get("state") if isinstance(status, dict) else alert.get("state", "alerting")
+                starts_at = alert.get("startsAt") or alert.get("newStateDate") or datetime.now(timezone.utc).isoformat()
+                try:
+                    ts_dt = datetime.fromisoformat(starts_at.replace("Z", "+00:00"))
+                except Exception:
+                    ts_dt = datetime.now(timezone.utc)
+                if ts_dt < cutoff:
+                    continue
+                service = labels.get("service") or labels.get("job") or labels.get("app") or "unknown"
+                summary = (
+                    annotations.get("summary")
+                    or annotations.get("description")
+                    or labels.get("alertname")
+                    or "Grafana alert fired"
+                )
+                out.append({
+                    "timestamp": ts_dt.isoformat(),
+                    "severity": _severity_from_state(state),
+                    "service": service,
+                    "message": f"Grafana alert: {labels.get('alertname', 'unknown')} — {summary}",
+                    "source": "grafana-alert",
+                    "meta": {"labels": labels, "state": state},
+                })
+    except Exception as exc:
+        logger.error(f"Grafana fetch_alerts error: {exc}")
+    return out
+
+
+async def fetch_loki_logs(
+    query: str = '{level=~"error|warn"}',
+    window_minutes: int = 10,
+    limit: int = 200,
+) -> List[Dict[str, Any]]:
+    """Fetch logs via Loki query_range API."""
+    base = _loki_url() or _base_url()
+    if not base or not os.getenv("GRAFANA_API_KEY"):
+        return []
+
+    end_ns = int(datetime.now(timezone.utc).timestamp() * 1e9)
+    start_ns = end_ns - int(window_minutes * 60 * 1e9)
+
+    url = f"{base}/loki/api/v1/query_range"
+    out: List[Dict[str, Any]] = []
+    try:
+        async with httpx.AsyncClient(timeout=20.0, verify=False) as client:
+            r = await client.get(
+                url,
+                headers=_headers(),
+                params={
+                    "query": query,
+                    "start": str(start_ns),
+                    "end": str(end_ns),
+                    "limit": str(limit),
+                    "direction": "backward",
+                },
+            )
+            if r.status_code >= 400:
+                logger.warning(f"Grafana Loki API {r.status_code}: {r.text[:200]}")
+                return []
+            result = r.json().get("data", {}).get("result", [])
+            for stream in result:
+                labels = stream.get("stream", {})
+                service = labels.get("service") or labels.get("app") or labels.get("job") or "unknown"
+                level = labels.get("level") or labels.get("severity") or "INFO"
+                for ts_ns_str, line in stream.get("values", []):
+                    ts_dt = datetime.fromtimestamp(int(ts_ns_str) / 1e9, tz=timezone.utc)
+                    out.append({
+                        "timestamp": ts_dt.isoformat(),
+                        "severity": level.upper(),
+                        "service": service,
+                        "message": line,
+                        "source": "grafana-loki",
+                        "meta": {"labels": labels},
+                    })
+    except Exception as exc:
+        logger.error(f"Grafana fetch_loki_logs error: {exc}")
+    return out
+
+
+async def fetch_all(window_minutes: int = 10) -> List[Dict[str, Any]]:
+    import asyncio
+    alerts, loki = await asyncio.gather(
+        fetch_alerts(window_minutes), fetch_loki_logs(window_minutes=window_minutes),
+        return_exceptions=False,
+    )
+    return alerts + loki
+
+
+async def health_check() -> Dict[str, Any]:
+    if not is_configured():
+        return {"ok": False, "configured": False, "error": "GRAFANA_URL/GRAFANA_API_KEY not set"}
+    try:
+        async with httpx.AsyncClient(timeout=10.0, verify=False) as client:
+            r = await client.get(f"{_base_url()}/api/health", headers=_headers())
+            return {"ok": r.status_code == 200, "configured": True, "status_code": r.status_code}
+    except Exception as exc:
+        return {"ok": False, "configured": True, "error": str(exc)}

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IncidentIQ — SRE War Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#080810; --bg2:#0d0d1e; --card:rgba(255,255,255,0.038);
+      --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.14);
+      --text:#eeeef5; --text2:#9898b0; --muted:#52526a;
+      --blue:#3B82F6; --cyan:#06B6D4; --red:#EF4444;
+      --green:#10B981; --amber:#F59E0B; --purple:#8B5CF6;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+    #root{width:100%;height:100%;position:relative;z-index:10}
+    #particle-canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
+    #scanline{position:fixed;top:0;left:0;width:100%;height:140px;background:linear-gradient(to bottom,transparent,rgba(59,130,246,0.025),transparent);animation:scan 12s linear infinite;pointer-events:none;z-index:2}
+    #vignette{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(0,0,0,0.55) 100%);pointer-events:none;z-index:1}
+    ::-webkit-scrollbar{width:3px;height:3px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.09);border-radius:2px}
+    @keyframes scan{from{transform:translateY(-100%)}to{transform:translateY(100vh)}}
+    @keyframes breathe{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.06);opacity:1}}
+    @keyframes breathe-fast{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    @keyframes spin-rev{from{transform:rotate(360deg)}to{transform:rotate(0deg)}}
+    @keyframes slide-down{from{transform:translateY(-22px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes fade-in{from{opacity:0}to{opacity:1}}
+    @keyframes flicker{0%,88%,100%{opacity:1}92%{opacity:.2}}
+    @keyframes flash-red{0%{opacity:0}12%{opacity:1}72%{opacity:.9}100%{opacity:0}}
+    @keyframes float-up{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes pulse-ring{0%{transform:scale(1);opacity:.5}100%{transform:scale(2.8);opacity:0}}
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+  <div id="scanline"></div>
+  <div id="vignette"></div>
+  <div id="root"></div>
+
+  <script>
+    (function(){
+      const canvas=document.getElementById('particle-canvas'),ctx=canvas.getContext('2d');
+      let W=canvas.width=window.innerWidth,H=canvas.height=window.innerHeight;
+      window.addEventListener('resize',()=>{W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight});
+      const N=70,D=128,pts=Array.from({length:N},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,r:Math.random()*1.2+.3,a:Math.random()*.32+.07}));
+      (function loop(){
+        ctx.clearRect(0,0,W,H);
+        for(const p of pts){p.x=(p.x+p.vx+W)%W;p.y=(p.y+p.vy+H)%H;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.28);ctx.fillStyle=`rgba(59,130,246,${p.a})`;ctx.fill()}
+        for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<D){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(59,130,246,${(1-d/D)*.09})`;ctx.lineWidth=.5;ctx.stroke()}}
+        requestAnimationFrame(loop);
+      })();
+    })();
+  </script>
+
+  <!-- External components (fetched successfully) -->
+  <script type="text/babel" src="components/data.jsx"></script>
+  <script type="text/babel" src="components/incident-card.jsx"></script>
+  <script type="text/babel" src="components/charts.jsx"></script>
+  <script type="text/babel" src="components/voice-orb.jsx"></script>
+
+  <!-- All remaining components inlined to avoid fetch failures -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    /* ── INCIDENT DETAIL ─────────────────────────────── */
+    function AIAnalysisPanel({ incident }) {
+      const [stages, setStages] = useState(AI_STAGES.map(s => ({ ...s, status: 'pending' })));
+      const [conclusion, setConclusion] = useState('');
+      const [typing, setTyping] = useState(false);
+      const timers = useRef([]);
+
+      useEffect(() => {
+        timers.current.forEach(clearTimeout); timers.current = [];
+        setStages(AI_STAGES.map(s => ({ ...s, status: 'pending' })));
+        setConclusion(''); setTyping(false);
+        let acc = 300;
+        AI_STAGES.forEach((stage, idx) => {
+          const startAt = acc, dur = parseFloat(stage.processingTime) * 1000;
+          acc += dur + 350;
+          timers.current.push(setTimeout(() => setStages(prev => prev.map((s,i) => i===idx?{...s,status:'running'}:s)), startAt));
+          timers.current.push(setTimeout(() => {
+            setStages(prev => prev.map((s,i) => i===idx?{...s,status:'done'}:s));
+            if (idx === AI_STAGES.length - 1) {
+              timers.current.push(setTimeout(() => {
+                setTyping(true); let i=0; const text=AI_CONCLUSION;
+                function tick(){if(i>=text.length){setTyping(false);return}setConclusion(p=>p+text[i++]);timers.current.push(setTimeout(tick,16))}
+                tick();
+              }, 400));
+            }
+          }, startAt + dur));
+        });
+        return () => timers.current.forEach(clearTimeout);
+      }, [incident?.id]);
+
+      const icon = {
+        pending: <span style={{color:'#52526a',fontSize:'15px',lineHeight:1}}>○</span>,
+        running: <div style={{width:'14px',height:'14px',border:'2px solid rgba(59,130,246,0.2)',borderTopColor:'#3B82F6',borderRadius:'50%',animation:'spin 0.7s linear infinite',flexShrink:0}} />,
+        done:    <span style={{color:'#10B981',fontSize:'15px',lineHeight:1}}>✓</span>,
+      };
+
+      return (
+        <div style={{background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:'12px',padding:'18px',height:'100%',display:'flex',flexDirection:'column'}}>
+          <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'18px'}}>
+            <span style={{width:'7px',height:'7px',borderRadius:'50%',background:'#8B5CF6',boxShadow:'0 0 8px rgba(139,92,246,0.6)',display:'inline-block',animation:typing?'flicker 0.9s infinite':'breathe 2s infinite'}} />
+            <span style={{color:'#eeeef5',fontWeight:'600',fontSize:'13px'}}>AI Analysis Pipeline</span>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:'8px',marginBottom:'16px'}}>
+            {stages.map((stage,i) => (
+              <div key={i} style={{display:'flex',alignItems:'center',gap:'11px',padding:'10px 12px',background:stage.status==='running'?'rgba(59,130,246,0.08)':stage.status==='done'?'rgba(16,185,129,0.055)':'rgba(255,255,255,0.02)',border:`1px solid ${stage.status==='running'?'rgba(59,130,246,0.22)':stage.status==='done'?'rgba(16,185,129,0.18)':'rgba(255,255,255,0.045)'}`,borderRadius:'8px',transition:'all 0.4s'}}>
+                <div style={{flexShrink:0}}>{icon[stage.status]}</div>
+                <div style={{flex:1}}>
+                  <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'2px'}}>
+                    <span style={{color:'#eeeef5',fontSize:'13px',fontWeight:'600'}}>{stage.name}</span>
+                    <span style={{background:`${stage.color}16`,color:stage.color,border:`1px solid ${stage.color}2e`,borderRadius:'3px',padding:'1px 6px',fontSize:'9px',fontFamily:"'JetBrains Mono',monospace",letterSpacing:'0.06em'}}>
+                      {stage.status==='running'?'RUNNING':stage.status==='done'?`✓ ${stage.processingTime}`:'PENDING'}
+                    </span>
+                  </div>
+                  <div style={{color:'#52526a',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace"}}>{stage.role}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{flex:1,display:'flex',flexDirection:'column'}}>
+            <div style={{color:'#52526a',fontSize:'10px',letterSpacing:'0.1em',marginBottom:'8px',textTransform:'uppercase'}}>Root Cause</div>
+            <div style={{flex:1,background:'rgba(139,92,246,0.06)',border:'1px solid rgba(139,92,246,0.14)',borderRadius:'8px',padding:'12px',color:'#eeeef5',fontSize:'12px',lineHeight:'1.7',fontFamily:"'Space Grotesk',sans-serif",minHeight:'80px'}}>
+              {conclusion || <span style={{color:'#52526a'}}>Awaiting analysis...</span>}
+              {typing && <span style={{display:'inline-block',width:'7px',height:'14px',background:'#8B5CF6',marginLeft:'2px',verticalAlign:'text-bottom',animation:'flicker 0.7s infinite'}} />}
+            </div>
+            {conclusion && !typing && (
+              <div style={{marginTop:'10px',display:'flex',alignItems:'center',gap:'10px',animation:'fade-in 0.5s ease'}}>
+                <div style={{flex:1,height:'3px',background:'rgba(255,255,255,0.06)',borderRadius:'2px',overflow:'hidden'}}>
+                  <div style={{height:'100%',width:`${incident?.confidence||94}%`,background:'linear-gradient(90deg,#3B82F6,#8B5CF6)',borderRadius:'2px',transition:'width 1s ease'}} />
+                </div>
+                <span style={{color:'#8B5CF6',fontSize:'13px',fontWeight:'700',fontFamily:"'JetBrains Mono',monospace"}}>{incident?.confidence||94}%</span>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function EvidencePanel() {
+      const [search, setSearch] = useState('');
+      const [filter, setFilter] = useState('ALL');
+      const visible = FAKE_LOGS.filter(l => (filter==='ALL'||l.level===filter) && (!search||l.msg.toLowerCase().includes(search.toLowerCase())));
+      const lStyle = { ERROR:{bg:'rgba(239,68,68,0.09)',col:'#EF4444'}, WARN:{bg:'rgba(245,158,11,0.07)',col:'#F59E0B'}, INFO:{bg:'rgba(255,255,255,0.025)',col:'#52526a'} };
+      return (
+        <div style={{background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:'12px',padding:'18px',height:'100%',display:'flex',flexDirection:'column'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'12px'}}>
+            <span style={{color:'#eeeef5',fontWeight:'600',fontSize:'13px'}}>Log Evidence</span>
+            <div style={{display:'flex',gap:'4px'}}>
+              {['ALL','ERROR','WARN','INFO'].map(f => (
+                <button key={f} onClick={()=>setFilter(f)} style={{background:filter===f?'rgba(59,130,246,0.18)':'rgba(255,255,255,0.04)',border:`1px solid ${filter===f?'rgba(59,130,246,0.38)':'rgba(255,255,255,0.07)'}`,color:filter===f?'#60A5FA':'#52526a',borderRadius:'4px',padding:'2px 8px',fontSize:'9px',cursor:'pointer',fontFamily:"'JetBrains Mono',monospace",letterSpacing:'0.06em',transition:'all 0.15s'}}>{f}</button>
+              ))}
+            </div>
+          </div>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search logs…" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:'6px',padding:'7px 12px',color:'#eeeef5',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace",marginBottom:'10px',outline:'none',width:'100%'}} onFocus={e=>e.target.style.borderColor='rgba(59,130,246,0.4)'} onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.07)'} />
+          <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:'3px'}}>
+            {visible.map((log,i) => {
+              const s=lStyle[log.level]||lStyle.INFO;
+              return (
+                <div key={i} style={{background:log.key?'rgba(59,130,246,0.065)':s.bg,borderLeft:`2px solid ${log.key?'#3B82F6':s.col}40`,borderRadius:'4px',padding:'5px 9px',fontFamily:"'JetBrains Mono',monospace",fontSize:'11px',display:'flex',alignItems:'flex-start',gap:'8px'}}>
+                  <span style={{color:'#52526a',flexShrink:0,fontSize:'10px'}}>{log.ts}</span>
+                  <span style={{color:s.col,flexShrink:0,fontWeight:'600',fontSize:'10px',letterSpacing:'0.04em'}}>{log.level}</span>
+                  <span style={{color:'#9898b0',lineHeight:'1.45',flex:1}}>{log.msg}</span>
+                  {log.key && <span style={{flexShrink:0,fontSize:'9px',color:'#3B82F6',background:'rgba(59,130,246,0.12)',border:'1px solid rgba(59,130,246,0.22)',borderRadius:'3px',padding:'1px 5px'}}>KEY</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    function FixCommandsPanel() {
+      const [copied, setCopied] = useState(null);
+      const riskCol = { LOW:'#10B981', MEDIUM:'#F59E0B', HIGH:'#EF4444' };
+      function copy(idx,cmd){navigator.clipboard?.writeText(cmd).catch(()=>{});setCopied(idx);setTimeout(()=>setCopied(null),2000)}
+      return (
+        <div style={{background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:'12px',padding:'18px',height:'100%',display:'flex',flexDirection:'column'}}>
+          <span style={{color:'#eeeef5',fontWeight:'600',fontSize:'13px',marginBottom:'14px',display:'block'}}>Fix Commands</span>
+          <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:'12px'}}>
+            {FIX_COMMANDS.map((fix,idx) => (
+              <div key={idx} style={{background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:'8px',overflow:'hidden'}}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 12px',background:'rgba(255,255,255,0.025)',borderBottom:'1px solid rgba(255,255,255,0.05)'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                    <span style={{background:`${riskCol[fix.risk]}12`,color:riskCol[fix.risk],border:`1px solid ${riskCol[fix.risk]}2e`,borderRadius:'3px',padding:'1px 6px',fontSize:'9px',fontFamily:"'JetBrains Mono',monospace",letterSpacing:'0.06em'}}>{fix.risk}</span>
+                    <span style={{color:'#9898b0',fontSize:'11px',fontWeight:'500'}}>{fix.title}</span>
+                  </div>
+                  <button onClick={()=>copy(idx,fix.cmd)} style={{background:copied===idx?'rgba(16,185,129,0.14)':'rgba(255,255,255,0.06)',border:`1px solid ${copied===idx?'rgba(16,185,129,0.28)':'rgba(255,255,255,0.09)'}`,color:copied===idx?'#10B981':'#9898b0',borderRadius:'5px',padding:'3px 10px',fontSize:'10px',cursor:'pointer',fontFamily:"'Space Grotesk',sans-serif",transition:'all 0.2s'}}>{copied===idx?'✓ Copied':'Copy'}</button>
+                </div>
+                <pre style={{padding:'11px 13px',color:'#9898b0',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace",lineHeight:'1.7',overflowX:'auto',whiteSpace:'pre'}}><code>{fix.cmd}</code></pre>
+              </div>
+            ))}
+            <div style={{display:'flex',gap:'8px',paddingTop:'2px'}}>
+              {[['Create PR →','#3B82F6'],['Slack Alert','#8B5CF6']].map(([label,col]) => (
+                <button key={label} style={{flex:1,background:`${col}12`,border:`1px solid ${col}2a`,color:col==='#3B82F6'?'#60A5FA':'#A78BFA',borderRadius:'8px',padding:'9px',fontSize:'12px',fontWeight:'600',cursor:'pointer',fontFamily:"'Space Grotesk',sans-serif",transition:'all 0.2s'}} onMouseEnter={e=>{e.target.style.background=`${col}22`;e.target.style.boxShadow=`0 0 14px ${col}40`}} onMouseLeave={e=>{e.target.style.background=`${col}12`;e.target.style.boxShadow='none'}}>{label}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function IncidentDetail({ incident, onBack }) {
+      const [elapsed, setElapsed] = useState(incident?.elapsed||0);
+      useEffect(()=>{setElapsed(incident?.elapsed||0);const t=setInterval(()=>setElapsed(e=>e+1),1000);return()=>clearInterval(t)},[incident?.id]);
+      if(!incident) return null;
+      const cfg=SEVERITY_CONFIG[incident.severity], isCrit=incident.severity==='CRITICAL';
+      return (
+        <div style={{height:'100%',display:'flex',flexDirection:'column',padding:'16px',gap:'14px',animation:'fade-in 0.3s ease',overflow:'hidden'}}>
+          <div style={{display:'flex',alignItems:'center',gap:'14px',padding:'12px 16px',flexShrink:0,background:'rgba(255,255,255,0.028)',border:`1px solid ${isCrit?'rgba(239,68,68,0.22)':'rgba(255,255,255,0.065)'}`,borderRadius:'10px'}}>
+            <button onClick={onBack} style={{background:'rgba(255,255,255,0.055)',border:'1px solid rgba(255,255,255,0.09)',color:'#9898b0',borderRadius:'6px',padding:'5px 12px',fontSize:'11px',cursor:'pointer',fontFamily:"'Space Grotesk',sans-serif",transition:'all 0.15s'}} onMouseEnter={e=>{e.target.style.background='rgba(255,255,255,0.1)';e.target.style.color='#eeeef5'}} onMouseLeave={e=>{e.target.style.background='rgba(255,255,255,0.055)';e.target.style.color='#9898b0'}}>← Back</button>
+            <span style={{background:cfg.bg,color:cfg.color,border:`1px solid ${cfg.color}35`,borderRadius:'4px',padding:'2px 9px',fontSize:'10px',fontFamily:"'JetBrains Mono',monospace",fontWeight:'600',letterSpacing:'0.1em',boxShadow:isCrit?`0 0 12px ${cfg.glow}`:'none'}}>
+              {isCrit && <span style={{marginRight:'3px',animation:'flicker 2s infinite'}}>●</span>}{incident.severity}
+            </span>
+            <span style={{color:'#52526a',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace"}}>{incident.id}</span>
+            <span style={{color:'#eeeef5',fontSize:'15px',fontWeight:'600',letterSpacing:'-0.02em'}}>{incident.service}</span>
+            <span style={{color:'#52526a',fontSize:'11px'}}>{incident.region}</span>
+            <div style={{marginLeft:'auto',textAlign:'right'}}>
+              <div style={{color:'#52526a',fontSize:'9px',letterSpacing:'0.1em',marginBottom:'1px'}}>ELAPSED</div>
+              <div style={{color:'#EF4444',fontSize:'17px',fontFamily:"'JetBrains Mono',monospace",fontWeight:'700'}}>{formatElapsed(elapsed)}</div>
+            </div>
+          </div>
+          <div style={{flex:1,display:'flex',gap:'12px',minHeight:0}}>
+            <div style={{flex:'0 0 32%',minHeight:0}}><AIAnalysisPanel incident={incident} /></div>
+            <div style={{flex:'0 0 38%',minHeight:0}}><EvidencePanel /></div>
+            <div style={{flex:'0 0 30%',minHeight:0}}><FixCommandsPanel /></div>
+          </div>
+          <div style={{flexShrink:0}}><HorizontalTimeline /></div>
+        </div>
+      );
+    }
+
+    /* ── DASHBOARD ───────────────────────────────────── */
+    function ChaosButton({ onTrigger }) {
+      const [open, setOpen] = useState(false);
+      const [loading, setLoading] = useState(false);
+      const ref = useRef(null);
+      useEffect(()=>{if(!open)return;const h=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false)};setTimeout(()=>document.addEventListener('click',h),0);return()=>document.removeEventListener('click',h)},[open]);
+      function pick(s){setOpen(false);setLoading(true);onTrigger(s);setTimeout(()=>setLoading(false),3200)}
+      return (
+        <div ref={ref} style={{position:'relative'}}>
+          <button onClick={()=>!loading&&setOpen(o=>!o)} style={{background:loading?'rgba(239,68,68,0.18)':'rgba(239,68,68,0.11)',border:`1px solid rgba(239,68,68,${loading?.52:.28})`,color:'#EF4444',borderRadius:'8px',padding:'7px 14px',fontSize:'12px',fontWeight:'600',cursor:loading?'default':'pointer',display:'flex',alignItems:'center',gap:'6px',fontFamily:"'Space Grotesk',sans-serif",transition:'all 0.2s',boxShadow:loading?'0 0 18px rgba(239,68,68,0.28)':'none'}} onMouseEnter={e=>{if(!loading){e.currentTarget.style.background='rgba(239,68,68,0.2)';e.currentTarget.style.boxShadow='0 0 16px rgba(239,68,68,0.32)'}}} onMouseLeave={e=>{if(!loading){e.currentTarget.style.background='rgba(239,68,68,0.11)';e.currentTarget.style.boxShadow='none'}}}>
+            {loading?<div style={{width:'12px',height:'12px',border:'2px solid rgba(239,68,68,0.3)',borderTopColor:'#EF4444',borderRadius:'50%',animation:'spin 0.7s linear infinite'}} />:<span>⚡</span>}
+            Trigger Incident
+          </button>
+          {open && (
+            <div style={{position:'absolute',top:'100%',right:0,marginTop:'6px',background:'#0d0d1e',border:'1px solid rgba(239,68,68,0.18)',borderRadius:'10px',padding:'7px',zIndex:200,minWidth:'210px',boxShadow:'0 10px 40px rgba(0,0,0,0.6)',animation:'slide-down 0.18s ease'}}>
+              {CHAOS_SCENARIOS.map(s=>(
+                <button key={s.id} onClick={()=>pick(s)} style={{display:'block',width:'100%',textAlign:'left',background:'transparent',border:'none',color:'#9898b0',padding:'8px 12px',borderRadius:'6px',cursor:'pointer',fontSize:'12px',fontFamily:"'Space Grotesk',sans-serif",transition:'all 0.14s'}} onMouseEnter={e=>{e.target.style.background='rgba(239,68,68,0.1)';e.target.style.color='#EF4444'}} onMouseLeave={e=>{e.target.style.background='transparent';e.target.style.color='#9898b0'}}>{s.label}</button>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function IncidentFeed({ incidents, onAnalyze, onTrigger }) {
+      const active = incidents.filter(i=>i.status==='ACTIVE'||i.status==='ANALYZING').length;
+      return (
+        <div style={{flex:'0 0 58%',display:'flex',flexDirection:'column',padding:'16px',borderRight:'1px solid rgba(255,255,255,0.055)',overflow:'hidden'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'14px',flexShrink:0}}>
+            <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+              <div style={{position:'relative',width:'10px',height:'10px'}}>
+                <div style={{width:'8px',height:'8px',borderRadius:'50%',background:'#EF4444',boxShadow:'0 0 8px rgba(239,68,68,0.8)',position:'absolute',top:'1px',left:'1px'}} />
+                <div style={{position:'absolute',inset:0,borderRadius:'50%',background:'rgba(239,68,68,0.3)',animation:'pulse-ring 2s ease-out infinite'}} />
+              </div>
+              <span style={{color:'#eeeef5',fontWeight:'600',fontSize:'14px',letterSpacing:'-0.01em'}}>Live Incident Feed</span>
+              <span style={{background:'rgba(239,68,68,0.1)',color:'#EF4444',border:'1px solid rgba(239,68,68,0.22)',borderRadius:'10px',padding:'1px 9px',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace"}}>{active} active</span>
+            </div>
+            <ChaosButton onTrigger={onTrigger} />
+          </div>
+          <div style={{flex:1,overflowY:'auto',paddingRight:'4px'}}>
+            {incidents.map(inc=><IncidentCard key={inc.id} incident={inc} onAnalyze={onAnalyze} isNew={inc.isNew} />)}
+          </div>
+        </div>
+      );
+    }
+
+    function MetricsPanel() {
+      return (
+        <div style={{flex:1,display:'flex',flexDirection:'column',padding:'16px',overflow:'hidden'}}>
+          <div style={{color:'#52526a',fontSize:'10px',letterSpacing:'0.1em',marginBottom:'12px',flexShrink:0,textTransform:'uppercase'}}>Live Telemetry</div>
+          <div style={{flex:1,overflowY:'auto'}}>
+            <ServiceTopology />
+            <MetricChart title="Error Rate"     color="#EF4444" baseVal={2.3}  variance={2.2}  spikeIdx={45} unit="%" height={78} />
+            <MetricChart title="Latency P99"    color="#F59E0B" baseVal={288}  variance={110}  spikeIdx={45} unit="ms" height={78} />
+            <MetricChart title="Requests / sec" color="#06B6D4" baseVal={1245} variance={290}  spikeIdx={null} unit="/s" height={78} />
+          </div>
+        </div>
+      );
+    }
+
+    function Dashboard({ incidents, onAnalyze, onTrigger }) {
+      return (
+        <div style={{height:'100%',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+          <div style={{flex:1,display:'flex',minHeight:0}}>
+            <IncidentFeed incidents={incidents} onAnalyze={onAnalyze} onTrigger={onTrigger} />
+            <MetricsPanel />
+          </div>
+        </div>
+      );
+    }
+
+    /* ── APP SHELL ───────────────────────────────────── */
+    function Sidebar({ incidents, view, onNavigate }) {
+      const critCount = incidents.filter(i=>i.severity==='CRITICAL'&&i.status!=='RESOLVED').length;
+      const nav = [{id:'dashboard',label:'War Room',icon:'◈'},{id:'incidents',label:'Incidents',icon:'⬡',badge:critCount},{id:'metrics',label:'Metrics',icon:'◎'},{id:'alerts',label:'Alerts',icon:'◇'},{id:'runbooks',label:'Runbooks',icon:'▷'}];
+      const providers = [{name:'Groq',lat:'12ms'},{name:'Gemini',lat:'34ms'},{name:'Claude',lat:'28ms'}];
+      return (
+        <div style={{width:'218px',flexShrink:0,background:'rgba(6,6,18,0.88)',borderRight:'1px solid rgba(255,255,255,0.065)',display:'flex',flexDirection:'column',backdropFilter:'blur(16px)'}}>
+          <div style={{padding:'18px 18px 16px',borderBottom:'1px solid rgba(255,255,255,0.065)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+              <div style={{position:'relative'}}>
+                <div style={{width:'34px',height:'34px',background:'linear-gradient(135deg,#3B82F6,#06B6D4)',borderRadius:'9px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 0 22px rgba(59,130,246,0.38)'}}>
+                  <span style={{color:'white',fontSize:'13px',fontWeight:'800',letterSpacing:'-0.05em'}}>IQ</span>
+                </div>
+                <div style={{position:'absolute',bottom:'-1px',right:'-1px',width:'9px',height:'9px',borderRadius:'50%',background:'#10B981',border:'2px solid #080810',boxShadow:'0 0 7px rgba(16,185,129,0.8)',animation:'breathe 2s ease-in-out infinite'}} />
+              </div>
+              <div>
+                <div style={{color:'#eeeef5',fontWeight:'700',fontSize:'15px',letterSpacing:'-0.03em',lineHeight:1.1}}>IncidentIQ</div>
+                <div style={{color:'#52526a',fontSize:'9px',letterSpacing:'0.12em',textTransform:'uppercase'}}>SRE War Room</div>
+              </div>
+            </div>
+          </div>
+          <nav style={{padding:'10px 9px',flex:1}}>
+            {nav.map(item=>{
+              const active=view===item.id||(item.id==='incidents'&&view==='incident')||(item.id==='dashboard'&&view==='dashboard');
+              return (
+                <div key={item.id} onClick={()=>{ if(item.id==='dashboard'){onNavigate('dashboard')}else{window.location.href=item.id+'.html'} }} style={{display:'flex',alignItems:'center',gap:'9px',padding:'7px 10px',borderRadius:'7px',cursor:'pointer',marginBottom:'2px',background:active?'rgba(59,130,246,0.11)':'transparent',border:`1px solid ${active?'rgba(59,130,246,0.18)':'transparent'}`,transition:'all 0.14s'}} onMouseEnter={e=>{if(!active)e.currentTarget.style.background='rgba(255,255,255,0.048)'}} onMouseLeave={e=>{if(!active)e.currentTarget.style.background='transparent'}}>
+                  <span style={{color:active?'#60A5FA':'#52526a',fontSize:'13px',width:'16px',textAlign:'center'}}>{item.icon}</span>
+                  <span style={{color:active?'#eeeef5':'#9898b0',fontSize:'13px',fontWeight:active?'500':'400',flex:1}}>{item.label}</span>
+                  {item.badge>0 && <span style={{background:'rgba(239,68,68,0.18)',color:'#EF4444',border:'1px solid rgba(239,68,68,0.28)',borderRadius:'8px',padding:'0 6px',fontSize:'10px',fontFamily:"'JetBrains Mono',monospace"}}>{item.badge}</span>}
+                </div>
+              );
+            })}
+          </nav>
+          <div style={{padding:'12px 16px',borderTop:'1px solid rgba(255,255,255,0.055)',borderBottom:'1px solid rgba(255,255,255,0.055)'}}>
+            <div style={{color:'#52526a',fontSize:'9px',letterSpacing:'0.12em',marginBottom:'9px',textTransform:'uppercase'}}>AI Providers</div>
+            {providers.map(p=>(
+              <div key={p.name} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'7px'}}>
+                <div style={{width:'6px',height:'6px',borderRadius:'50%',flexShrink:0,background:'#10B981',boxShadow:'0 0 6px rgba(16,185,129,0.65)',animation:'breathe 2.5s ease-in-out infinite'}} />
+                <span style={{color:'#9898b0',fontSize:'12px',flex:1}}>{p.name}</span>
+                <span style={{color:'#52526a',fontSize:'10px',fontFamily:"'JetBrains Mono',monospace"}}>{p.lat}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:'8px'}}>
+            <div style={{width:'6px',height:'6px',borderRadius:'50%',background:'#10B981',boxShadow:'0 0 6px rgba(16,185,129,0.7)',animation:'breathe 1.6s ease-in-out infinite'}} />
+            <span style={{color:'#52526a',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace"}}>WS Connected</span>
+            <div style={{marginLeft:'auto',display:'flex',gap:'3px'}}>
+              {[0,1,2].map(i=><div key={i} style={{width:'3px',height:`${6+i*3}px`,background:'#10B981',borderRadius:'1px',opacity:0.6+i*0.15}} />)}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function Header({ incidents, flash }) {
+      const [time, setTime] = useState(new Date());
+      useEffect(()=>{const t=setInterval(()=>setTime(new Date()),1000);return()=>clearInterval(t)},[]);
+      const critCount=incidents.filter(i=>i.severity==='CRITICAL').length;
+      const affected=incidents.filter(i=>i.status!=='RESOLVED').length;
+      const stats=[{label:'ACTIVE INCIDENTS',value:critCount,color:'#EF4444'},{label:'SERVICES AFFECTED',value:`${affected}/7`,color:'#F59E0B'},{label:'SYSTEM HEALTH',value:'94.2%',color:'#10B981'},{label:'MTTR',value:'4m 32s',color:'#06B6D4'}];
+      return (
+        <div style={{padding:'9px 20px',borderBottom:'1px solid rgba(255,255,255,0.065)',display:'flex',alignItems:'center',gap:'20px',background:'rgba(6,6,18,0.5)',backdropFilter:'blur(10px)',flexShrink:0,position:'relative',overflow:'hidden',minHeight:'52px'}}>
+          {flash && (
+            <div style={{position:'absolute',inset:0,background:'rgba(239,68,68,0.11)',animation:'flash-red 2.5s ease forwards',zIndex:5,pointerEvents:'none',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                <span style={{animation:'flicker 0.4s infinite',fontSize:'14px'}}>🚨</span>
+                <span style={{color:'#EF4444',fontWeight:'700',fontSize:'13px',letterSpacing:'0.05em'}}>INCIDENT DETECTED — {flash}</span>
+              </div>
+            </div>
+          )}
+          {stats.map(s=>(
+            <div key={s.label}>
+              <div style={{color:'#52526a',fontSize:'9px',letterSpacing:'0.1em',marginBottom:'1px'}}>{s.label}</div>
+              <div style={{color:s.color,fontSize:'15px',fontWeight:'700',fontFamily:"'JetBrains Mono',monospace",textShadow:`0 0 10px ${s.color}55`}}>{s.value}</div>
+            </div>
+          ))}
+          <div style={{marginLeft:'auto',color:'#52526a',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace",letterSpacing:'0.05em'}}>{time.toLocaleTimeString('en-US',{hour12:false})} UTC</div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [view,setView]=useState('dashboard');
+      const [selected,setSelected]=useState(null);
+      const [incidents,setIncidents]=useState(INITIAL_INCIDENTS);
+      const [flash,setFlash]=useState(null);
+      const [orbMsg,setOrbMsg]=useState(null);
+
+      function goIncident(inc){setSelected(inc);setView('incident')}
+
+      function triggerChaos(scenario){
+        setFlash(scenario.label);
+        const newInc=createChaosIncident(scenario);
+        setTimeout(()=>{setIncidents(prev=>[newInc,...prev]);setOrbMsg(`Critical incident detected on ${newInc.service}. Analyzing root cause now.`)},900);
+        setTimeout(()=>goIncident(newInc),2300);
+        setTimeout(()=>setFlash(null),2700);
+      }
+
+      return (
+        <div style={{display:'flex',height:'100vh',overflow:'hidden',position:'relative',zIndex:10}}>
+          <Sidebar incidents={incidents} view={view} onNavigate={v=>{if(v==='dashboard')setView('dashboard')}} />
+          <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
+            <Header incidents={incidents} flash={flash} />
+            <main style={{flex:1,overflow:'hidden'}}>
+              {view==='dashboard'
+                ? <Dashboard incidents={incidents} onAnalyze={goIncident} onTrigger={triggerChaos} />
+                : <IncidentDetail incident={selected} onBack={()=>setView('dashboard')} />
+              }
+            </main>
+          </div>
+          <VoiceOrb externalMessage={orbMsg} onExternalDone={()=>setOrbMsg(null)} />
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+# Secrets must never enter the image
+.env
+backend/.env
+*.env
+.deploy-env.yaml
+
+# VCS & local junk
+.git/
+.gitignore
+**/__pycache__/
+*.py[cod]
+
+# Logs / runtime artifacts
+*.log
+*.out
+*.err
+*.bin
+backend/server.log
+backend/uvicorn.log
+backend/uvicorn.err
+backend/runtest.out
+backend/speak_test.bin
+
+# Docs not needed at runtime
+README.md
+.vscode/
+.idea/

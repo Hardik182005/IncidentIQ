@@ -1,0 +1,33 @@
+# ── Secrets (NEVER commit) ─────────────────────────────────────────────
+.env
+backend/.env
+*.env
+!.env.example
+!backend/.env.example
+.deploy-env.yaml
+
+# ── Python ─────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ── Runtime / logs / artifacts ─────────────────────────────────────────
+*.log
+*.out
+*.err
+*.bin
+backend/server.log
+backend/uvicorn.log
+backend/uvicorn.err
+backend/runtest.out
+backend/speak_test.bin
+incidentiq_logs/
+
+# ── OS / editor ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

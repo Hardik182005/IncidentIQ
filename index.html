@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IncidentIQ — AI Incident Intelligence Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#080810; --bg2:#0c0c1a; --bg3:#111128;
+      --border:rgba(255,255,255,0.07); --border-bright:rgba(255,255,255,0.13);
+      --text:#eeeef5; --text2:#9898b0; --muted:#52526a;
+      --blue:#3B82F6; --cyan:#06B6D4; --red:#EF4444; --green:#10B981; --amber:#F59E0B; --purple:#8B5CF6;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      background-color:var(--bg);
+      /* Monitoring graph-paper background: major dot grid + fine sub-grid lines */
+      background-image:
+        radial-gradient(circle, rgba(59,130,246,0.18) 1.5px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(rgba(59,130,246,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,0.06) 1px, transparent 1px);
+      background-size:
+        88px 88px,
+        22px 22px,
+        88px 88px,
+        88px 88px;
+      color:var(--text);font-family:'Space Grotesk',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+    }
+    a{text-decoration:none}
+
+    /* NAV */
+    .nav{position:fixed;top:0;left:0;right:0;z-index:200;height:60px;display:flex;align-items:center;padding:0 56px;gap:40px;border-bottom:1px solid var(--border);background:rgba(8,8,16,0.8);backdrop-filter:blur(20px)}
+    .nav-logo{display:flex;align-items:center;gap:9px}
+    .logo-sq{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#3B82F6,#06B6D4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;letter-spacing:-0.05em;flex-shrink:0}
+    .logo-name{font-weight:700;font-size:15px;letter-spacing:-0.03em;color:var(--text)}
+    .nav-links{display:flex;gap:28px;margin:0 auto}
+    .nav-links a{font-size:13px;color:var(--muted);transition:color 0.18s}
+    .nav-links a:hover{color:var(--text)}
+    .nav-cta{font-size:13px;font-weight:600;color:var(--blue);border:1px solid rgba(59,130,246,0.3);border-radius:7px;padding:7px 16px;transition:all 0.2s;white-space:nowrap}
+    .nav-cta:hover{background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.5)}
+
+    /* HERO */
+    .hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:80px 56px 0;gap:0;position:relative;overflow:hidden}
+    .hero-left{padding-right:60px;padding-top:40px}
+    .hero-eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:0.13em;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:24px;border:1px solid var(--border);border-radius:4px;padding:5px 12px}
+    .hero-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+    .hero-h1{font-size:clamp(52px,5.5vw,88px);font-weight:700;line-height:0.95;letter-spacing:-0.045em;margin-bottom:26px}
+    .hero-h1 em{font-style:normal;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,0.25)}
+    .hero-h1 .word-accent{color:var(--blue)}
+    .hero-sub{font-size:17px;color:var(--text2);line-height:1.65;font-weight:300;max-width:460px;margin-bottom:36px}
+    .hero-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .btn-p{background:var(--blue);color:#fff;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;letter-spacing:0.01em;transition:all 0.2s;border:none;cursor:pointer;display:inline-block}
+    .btn-p:hover{background:#2563EB;transform:translateY(-1px)}
+    .btn-s{font-size:14px;color:var(--text2);border:1px solid var(--border);border-radius:8px;padding:12px 20px;transition:all 0.2s;display:inline-block}
+    .btn-s:hover{color:var(--text);border-color:var(--border-bright);background:rgba(255,255,255,0.04)}
+    .hero-right{position:relative;height:100vh;display:flex;align-items:center;justify-content:center}
+    #hero-canvas{width:100%;height:80vh;border-radius:16px;border:1px solid var(--border)}
+    .canvas-overlay{position:absolute;inset:0;background:linear-gradient(to right,var(--bg) 0%,transparent 18%);pointer-events:none;border-radius:16px}
+
+    /* MARQUEE */
+    .ticker{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:11px 0;overflow:hidden;background:var(--bg2)}
+    .ticker-track{display:flex;gap:48px;animation:scroll-x 30s linear infinite;width:max-content}
+    .ticker-item{display:flex;align-items:center;gap:8px;white-space:nowrap;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:0.05em}
+    .td{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+    .td.g{background:var(--green)}
+    .td.r{background:var(--red)}
+
+    /* STATS */
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border)}
+    .stat{padding:56px 48px;border-right:1px solid var(--border)}
+    .stat:last-child{border-right:none}
+    .stat-n{font-size:52px;font-weight:700;letter-spacing:-0.05em;font-family:'JetBrains Mono',monospace;line-height:1;margin-bottom:10px}
+    .stat-l{font-size:11px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px}
+    .stat-s{font-size:13px;color:var(--text2)}
+
+    /* SECTION COMMON */
+    .section{padding:100px 56px}
+    .eyebrow{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;color:var(--blue);margin-bottom:16px}
+    .section-h{font-size:clamp(32px,4vw,52px);font-weight:700;letter-spacing:-0.035em;line-height:1.05;margin-bottom:16px}
+    .section-p{font-size:17px;color:var(--text2);line-height:1.65;font-weight:300;max-width:560px;margin-bottom:60px}
+
+    /* FEATURES */
+    .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+    .feat{background:var(--bg2);padding:36px;transition:background 0.2s}
+    .feat:hover{background:var(--bg3)}
+    .feat-num{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:0.08em;margin-bottom:20px}
+    .feat-h{font-size:18px;font-weight:600;letter-spacing:-0.02em;margin-bottom:10px}
+    .feat-p{font-size:14px;color:var(--text2);line-height:1.65;font-weight:300;margin-bottom:18px}
+    .feat-tags{display:flex;gap:5px;flex-wrap:wrap}
+    .ftag{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted);background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:3px;padding:2px 8px}
+    .ai-chain{display:flex;align-items:center;gap:6px;margin-top:16px}
+    .aip{font-size:10px;font-family:'JetBrains Mono',monospace;padding:3px 9px;border-radius:4px;font-weight:500}
+    .aip.g{background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.2)}
+    .aip.b{background:rgba(59,130,246,0.1);color:var(--blue);border:1px solid rgba(59,130,246,0.2)}
+    .aip.p{background:rgba(139,92,246,0.1);color:var(--purple);border:1px solid rgba(139,92,246,0.2)}
+    .aip-a{color:var(--muted);font-size:11px}
+
+    /* PROCESS */
+    .process-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:48px}
+    .proc-step{border-top:1px solid var(--border);padding-top:28px}
+    .proc-n{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:0.1em;margin-bottom:20px}
+    .proc-h{font-size:22px;font-weight:600;letter-spacing:-0.025em;margin-bottom:12px;line-height:1.2}
+    .proc-p{font-size:14px;color:var(--text2);line-height:1.7;font-weight:300}
+
+    /* TERMINAL */
+    .terminal-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;max-width:760px;margin:0 auto}
+    .term-bar{display:flex;align-items:center;gap:7px;padding:12px 16px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02)}
+    .term-dot{width:11px;height:11px;border-radius:50%}
+    .term-title{margin-left:auto;margin-right:auto;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.06em}
+    .term-body{padding:20px 24px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.8;min-height:280px}
+    .term-line{display:flex;gap:10px;margin-bottom:2px}
+    .term-line.hidden{opacity:0}
+    .tc-muted{color:var(--muted)}
+    .tc-green{color:var(--green)}
+    .tc-blue{color:var(--blue)}
+    .tc-amber{color:var(--amber)}
+    .tc-purple{color:var(--purple)}
+    .tc-red{color:var(--red)}
+    .tc-white{color:var(--text)}
+    .term-cursor{display:inline-block;width:8px;height:14px;background:var(--text2);margin-left:2px;vertical-align:text-bottom;animation:blink 1s step-end infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+    /* CTA */
+    .cta-section{margin:0 56px 80px;padding:80px;border:1px solid var(--border);border-radius:20px;background:var(--bg2);text-align:center;position:relative;overflow:hidden}
+    .cta-section::before{content:'';position:absolute;top:0;left:30%;right:30%;height:1px;background:linear-gradient(90deg,transparent,rgba(59,130,246,0.5),transparent)}
+    .cta-h{font-size:clamp(36px,4vw,56px);font-weight:700;letter-spacing:-0.04em;margin-bottom:16px;line-height:1}
+    .cta-p{font-size:17px;color:var(--text2);margin-bottom:36px;font-weight:300}
+
+    /* FOOTER */
+    .footer{padding:32px 56px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .footer-links{display:flex;gap:24px}
+    .footer-links a{font-size:13px;color:var(--muted);transition:color 0.18s}
+    .footer-links a:hover{color:var(--text)}
+
+    /* REVEAL */
+    .reveal{opacity:0;transform:translateY(20px);transition:opacity 0.6s ease,transform 0.6s ease}
+    .reveal.in{opacity:1;transform:none}
+    .reveal-d1{transition-delay:0.08s}
+    .reveal-d2{transition-delay:0.16s}
+    .reveal-d3{transition-delay:0.24s}
+
+    @keyframes scroll-x{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    @keyframes hero-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+    .hero-left>*{animation:hero-in 0.65s ease both}
+    .hero-eyebrow{animation-delay:.05s}
+    .hero-h1{animation-delay:.18s}
+    .hero-sub{animation-delay:.32s}
+    .hero-actions{animation-delay:.44s}
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <div class="logo-sq">IQ</div>
+    <span class="logo-name">IncidentIQ</span>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#process">How it works</a>
+    <a href="#demo">Demo</a>
+  </div>
+  <a href="dashboard.html" class="nav-cta">Open War Room →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow"><span class="hero-dot"></span> Live · 2,847 incidents resolved</div>
+    <h1 class="hero-h1" id="hero-h1">
+      <span class="word-accent" id="scramble-1">Resolve</span><br>
+      incidents<br>
+      <em>10x faster.</em>
+    </h1>
+    <p class="hero-sub">Multi-model AI that detects, diagnoses, and fixes production incidents in real-time — before your users notice.</p>
+    <div class="hero-actions">
+      <a href="dashboard.html" class="btn-p">Open War Room →</a>
+      <a href="#demo" class="btn-s">See AI in action</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <canvas id="hero-canvas"></canvas>
+    <div class="canvas-overlay"></div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track" id="ticker">
+    <span class="ticker-item"><span class="td g"></span>gateway-api — HEALTHY</span>
+    <span class="ticker-item"><span class="td g"></span>auth-service — HEALTHY</span>
+    <span class="ticker-item"><span class="td g"></span>postgres-primary — HEALTHY</span>
+    <span class="ticker-item"><span class="td g"></span>payments-api — HEALTHY</span>
+    <span class="ticker-item"><span class="td g"></span>redis-cache — HEALTHY</span>
+    <span class="ticker-item"><span class="td g"></span>INC-2847 RESOLVED — root cause: DB pool exhaustion — 4m 32s</span>
+    <span class="ticker-item"><span class="td g"></span>AI confidence: 94% — fix applied — all services nominal</span>
+    <span class="ticker-item"><span class="td g"></span>gateway-api — HEALTHY</span>
+    <span class="ticker-item"><span class="td g"></span>auth-service — HEALTHY</span>
+    <span class="ticker-item"><span class="td g"></span>postgres-primary — HEALTHY</span>
+    <span class="ticker-item"><span class="td g"></span>payments-api — HEALTHY</span>
+    <span class="ticker-item"><span class="td g"></span>redis-cache — HEALTHY</span>
+    <span class="ticker-item"><span class="td g"></span>INC-2847 RESOLVED — root cause: DB pool exhaustion — 4m 32s</span>
+    <span class="ticker-item"><span class="td g"></span>AI confidence: 94% — fix applied — all services nominal</span>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats" id="stats">
+  <div class="stat reveal"><div class="stat-n" style="color:var(--cyan)" data-v="4.5" data-suf=" min" data-dec="1">—</div><div class="stat-l">Mean MTTR</div><div class="stat-s">Down from 42 min</div></div>
+  <div class="stat reveal reveal-d1"><div class="stat-n" style="color:var(--green)" data-v="99.97" data-suf="%" data-dec="2">—</div><div class="stat-l">Uptime</div><div class="stat-s">Across all services</div></div>
+  <div class="stat reveal reveal-d2"><div class="stat-n" style="color:var(--purple)" data-v="2847" data-suf="">—</div><div class="stat-l">Incidents resolved</div><div class="stat-s">By AI root cause analysis</div></div>
+  <div class="stat reveal reveal-d3"><div class="stat-n" style="color:var(--red)" data-v="0.8" data-suf="s" data-dec="1">—</div><div class="stat-l">Detection time</div><div class="stat-s">Anomaly to alert</div></div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <p class="eyebrow reveal">Platform</p>
+  <h2 class="section-h reveal">The complete SRE command center.</h2>
+  <p class="section-p reveal">From anomaly detection to one-click remediation — every tool your team needs in a single, unified interface.</p>
+  <div class="feat-grid">
+    <div class="feat reveal">
+      <div class="feat-num">01</div>
+      <div class="feat-h">Multi-Model AI Analysis</div>
+      <div class="feat-p">Three specialized models analyze your incident simultaneously — Groq for speed, Gemini for pattern matching, Claude for root cause synthesis.</div>
+      <div class="ai-chain"><span class="aip g">Groq</span><span class="aip-a">→</span><span class="aip b">Gemini</span><span class="aip-a">→</span><span class="aip p">Claude</span></div>
+    </div>
+    <div class="feat reveal reveal-d1">
+      <div class="feat-num">02</div>
+      <div class="feat-h">Real-time Observability</div>
+      <div class="feat-p">Live service topology map, error rate charts, latency P99, and request volume — all updating every 2 seconds with anomaly markers.</div>
+      <div class="feat-tags"><span class="ftag">Topology map</span><span class="ftag">Live charts</span><span class="ftag">Anomaly markers</span></div>
+    </div>
+    <div class="feat reveal reveal-d2">
+      <div class="feat-num">03</div>
+      <div class="feat-h">Voice Interface</div>
+      <div class="feat-p">Ask ARIA questions in natural language. Get spoken diagnoses, step-by-step runbooks, and immediate fix commands without leaving the war room.</div>
+      <div class="feat-tags"><span class="ftag">Natural language</span><span class="ftag">Voice response</span><span class="ftag">Audio visualization</span></div>
+    </div>
+    <div class="feat reveal">
+      <div class="feat-num">04</div>
+      <div class="feat-h">Chaos Engineering</div>
+      <div class="feat-p">Trigger controlled incident scenarios — DB leaks, memory leaks, cascade failures — to validate your detection and response pipeline on-demand.</div>
+      <div class="feat-tags"><span class="ftag">DB connection leak</span><span class="ftag">Memory leak</span><span class="ftag">Cascade failure</span></div>
+    </div>
+    <div class="feat reveal reveal-d1">
+      <div class="feat-num">05</div>
+      <div class="feat-h">AI Fix Commands</div>
+      <div class="feat-p">Risk-rated remediation scripts generated instantly. One-click copy, GitHub PR creation, and Slack notification — all from the same screen.</div>
+      <div class="feat-tags"><span class="ftag">Risk-rated</span><span class="ftag">One-click copy</span><span class="ftag">Create PR</span></div>
+    </div>
+    <div class="feat reveal reveal-d2">
+      <div class="feat-num">06</div>
+      <div class="feat-h">Incident Timeline</div>
+      <div class="feat-p">Full chronological event map — deploys, spikes, alerts, mitigations, and recovery — giving complete context for every incident post-mortem.</div>
+      <div class="feat-tags"><span class="ftag">Deploy markers</span><span class="ftag">Spike detection</span><span class="ftag">Recovery tracking</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="section" id="process" style="padding-top:0">
+  <p class="eyebrow reveal">How it works</p>
+  <h2 class="section-h reveal">Alert to resolution.<br>Under 5 minutes.</h2>
+  <p class="section-p reveal">IncidentIQ automates the slowest, most stressful parts of incident response so your engineers fix problems, not spreadsheets.</p>
+  <div class="process-grid">
+    <div class="proc-step reveal">
+      <div class="proc-n">01 — DETECT</div>
+      <div class="proc-h">Anomaly detected in &lt;1 second</div>
+      <div class="proc-p">Continuous monitoring across error rates, latency, and service topology. The moment anything diverges from baseline, an incident is opened and your team is alerted. No manual threshold tuning needed.</div>
+    </div>
+    <div class="proc-step reveal reveal-d1">
+      <div class="proc-n">02 — DIAGNOSE</div>
+      <div class="proc-h">Root cause in 5.1 seconds</div>
+      <div class="proc-p">Three AI models run in parallel over your logs, metrics, and dependency graph. Groq identifies the anomaly type, Gemini correlates with recent deploys, Claude synthesizes a confidence-scored root cause.</div>
+    </div>
+    <div class="proc-step reveal reveal-d2">
+      <div class="proc-n">03 — RESOLVE</div>
+      <div class="proc-h">Risk-rated fix, ready to run</div>
+      <div class="proc-p">Prioritized remediation commands — labeled LOW, MEDIUM, HIGH risk — generated from your specific incident context. Copy to clipboard, open a PR, or fire a Slack alert. Average MTTR: 4 minutes 32 seconds.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL DEMO -->
+<section class="section" id="demo" style="padding-top:0">
+  <p class="eyebrow reveal">AI in action</p>
+  <h2 class="section-h reveal">Watch the analysis run.</h2>
+  <p class="section-p reveal">This is what IncidentIQ's AI pipeline actually outputs when it analyzes a production incident. Every line, in real-time.</p>
+  <div class="terminal-wrap reveal">
+    <div class="term-bar">
+      <div class="term-dot" style="background:#EF4444;opacity:0.7"></div>
+      <div class="term-dot" style="background:#F59E0B;opacity:0.7"></div>
+      <div class="term-dot" style="background:#10B981;opacity:0.7"></div>
+      <div class="term-title">incidentiq — analyze INC-2847</div>
+    </div>
+    <div class="term-body" id="term-body">
+      <div class="term-line"><span class="tc-muted">$</span><span class="tc-white">incidentiq analyze INC-2847 --service payments-api</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section reveal">
+  <h2 class="cta-h">Ready to resolve incidents<br>10x faster?</h2>
+  <p class="cta-p">Enter the war room and see every feature working live.</p>
+  <a href="dashboard.html" class="btn-p" style="font-size:15px;padding:13px 32px">Open War Room →</a>
+</section>
+
+<footer class="footer">
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="logo-sq" style="width:24px;height:24px;font-size:10px">IQ</div>
+    <span style="font-size:14px;font-weight:600;letter-spacing:-0.02em">IncidentIQ</span>
+    <span style="font-size:12px;color:var(--muted);margin-left:12px">© 2026 · Built for SRE teams</span>
+  </div>
+  <div class="footer-links">
+    <a href="dashboard.html">War Room</a>
+    <a href="#features">Features</a>
+    <a href="#process">How it works</a>
+    <a href="#demo">Demo</a>
+  </div>
+</footer>
+
+<script>
+/* ── HERO CANVAS: ANIMATED INCIDENT FLOWCHART ───────────────────────────── */
+(function(){
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, tick = 0, phase = 0, phaseT = 0;
+
+  const NODES = [
+    {id:'gateway', label:'gateway',  role:'Edge',    bx:.50, by:.09},
+    {id:'auth',    label:'auth-svc', role:'Auth',    bx:.18, by:.41},
+    {id:'pay',     label:'payments', role:'Payment', bx:.50, by:.41},
+    {id:'user',    label:'user-svc', role:'User',    bx:.82, by:.41},
+    {id:'pg',      label:'postgres', role:'DB',      bx:.30, by:.77},
+    {id:'redis',   label:'redis',    role:'Cache',   bx:.65, by:.77},
+    {id:'notif',   label:'notif',    role:'Worker',  bx:.88, by:.63},
+  ];
+
+  const EDGES = [
+    {a:'gateway',b:'auth'}, {a:'gateway',b:'pay'}, {a:'gateway',b:'user'},
+    {a:'auth',b:'pg'}, {a:'pay',b:'pg'},
+    {a:'user',b:'redis'}, {a:'user',b:'notif'},
+  ];
+
+  // Per-edge: 3 staggered packets each
+  const PKTS = {};
+  EDGES.forEach(e => {
+    PKTS[e.a+'-'+e.b] = [0, 0.33, 0.67].map((o,i)=>({t:o, spd:0.005+i*0.001}));
+  });
+
+  const STORY = [
+    { dur:220, states:{gateway:'healthy',auth:'healthy',pay:'healthy',user:'healthy',pg:'healthy',redis:'healthy',notif:'healthy'},   phase:'MONITORING' },
+    { dur:80,  states:{gateway:'healthy',auth:'healthy',pay:'critical',user:'healthy',pg:'critical',redis:'healthy',notif:'degraded'}, phase:'ANOMALY' },
+    { dur:120, states:{gateway:'healthy',auth:'healthy',pay:'critical',user:'healthy',pg:'critical',redis:'healthy',notif:'degraded'}, phase:'ANALYZING' },
+    { dur:100, states:{gateway:'healthy',auth:'healthy',pay:'degraded',user:'healthy',pg:'degraded',redis:'healthy',notif:'healthy'},  phase:'MITIGATING' },
+    { dur:140, states:{gateway:'healthy',auth:'healthy',pay:'healthy',user:'healthy',pg:'healthy',redis:'healthy',notif:'healthy'},    phase:'RESOLVED' },
+  ];
+
+  const SC = {
+    healthy:  {stroke:'#10B981', fill:'rgba(16,185,129,0.10)', dot:'#10B981', glow:'rgba(16,185,129,0.35)', pkt:'#10B981'},
+    degraded: {stroke:'#F59E0B', fill:'rgba(245,158,11,0.10)', dot:'#F59E0B', glow:'rgba(245,158,11,0.35)', pkt:'#F59E0B'},
+    critical: {stroke:'#EF4444', fill:'rgba(239,68,68,0.14)',  dot:'#EF4444', glow:'rgba(239,68,68,0.5)',  pkt:'#EF4444'},
+  };
+
+  function resize(){ W=canvas.width=canvas.offsetWidth; H=canvas.height=canvas.offsetHeight; }
+  window.addEventListener('resize', resize);
+  setTimeout(resize, 50);
+
+  function np(id){ const n=NODES.find(n=>n.id===id); return {x:n.bx*W, y:n.by*H}; }
+  function cp(pa, pb){ return {x:(pa.x+pb.x)/2, y:(pa.y+pb.y)/2 - H*0.055}; }
+  function qp(p0,c,p1,t){ const u=1-t; return {x:u*u*p0.x+2*u*t*c.x+t*t*p1.x, y:u*u*p0.y+2*u*t*c.y+t*t*p1.y}; }
+
+  function rrect(x,y,w,h,r){
+    ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+  }
+
+  function drawArrow(p0,c,p1,col){
+    const t=0.54, t2=0.58;
+    const a=qp(p0,c,p1,t), b2=qp(p0,c,p1,t2);
+    const angle=Math.atan2(b2.y-a.y,b2.x-a.x);
+    ctx.save(); ctx.translate(a.x,a.y); ctx.rotate(angle);
+    ctx.beginPath(); ctx.moveTo(6,0); ctx.lineTo(0,-3.5); ctx.lineTo(0,3.5); ctx.closePath();
+    ctx.fillStyle=col; ctx.fill(); ctx.restore();
+  }
+
+  function draw(){
+    tick++;
+    const story = STORY[phase%STORY.length];
+    phaseT++;
+    if(phaseT>story.dur){ phase++; phaseT=0; }
+
+    ctx.clearRect(0,0,W,H);
+
+    // Dot-grid background
+    for(let x=24; x<W; x+=52) for(let y=24; y<H; y+=52){
+      ctx.beginPath(); ctx.arc(x,y,1,0,6.28);
+      ctx.fillStyle='rgba(255,255,255,0.04)'; ctx.fill();
+    }
+
+    const states = story.states;
+
+    // ── EDGES ──
+    for(const e of EDGES){
+      const pa=np(e.a), pb=np(e.b), c=cp(pa,pb);
+      const sa=states[e.a], sb=states[e.b];
+      const isCrit=sa==='critical'||sb==='critical';
+      const isDeg=sa==='degraded'||sb==='degraded';
+      const col = isCrit?'rgba(239,68,68,0.28)':isDeg?'rgba(245,158,11,0.22)':'rgba(16,185,129,0.14)';
+
+      // Base path
+      ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.quadraticCurveTo(c.x,c.y,pb.x,pb.y);
+      ctx.strokeStyle=col; ctx.lineWidth=isCrit?1.5:1; ctx.stroke();
+
+      // Directional arrow
+      drawArrow(pa,c,pb, isCrit?'rgba(239,68,68,0.45)':isDeg?'rgba(245,158,11,0.38)':'rgba(16,185,129,0.28)');
+
+      // Flowing packets
+      const key=e.a+'-'+e.b;
+      const analyzing = story.phase==='ANALYZING';
+      PKTS[key].forEach(pkt=>{
+        if(!(analyzing&&isCrit)) pkt.t=(pkt.t+pkt.spd)%1;
+        const pt=qp(pa,c,pb,pkt.t);
+
+        // Trailing glow
+        for(let i=1;i<=5;i++){
+          const tp=((pkt.t-i*0.018+1)%1);
+          const tr=qp(pa,c,pb,tp);
+          ctx.beginPath(); ctx.arc(tr.x,tr.y,1.5,0,6.28);
+          const alpha=isCrit?(0.5-i*0.08):isDeg?(0.35-i*0.06):(0.28-i*0.05);
+          ctx.fillStyle=isCrit?`rgba(239,68,68,${Math.max(0,alpha)})`:isDeg?`rgba(245,158,11,${Math.max(0,alpha)})`: `rgba(16,185,129,${Math.max(0,alpha)})`;
+          ctx.fill();
+        }
+
+        // Packet head
+        ctx.beginPath(); ctx.arc(pt.x,pt.y,3,0,6.28);
+        ctx.fillStyle=SC[isCrit?'critical':isDeg?'degraded':'healthy'].pkt;
+        ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=isCrit?10:6;
+        ctx.fill(); ctx.shadowBlur=0;
+      });
+    }
+
+    // ── NODES ──
+    for(const n of NODES){
+      const x=n.bx*W, y=n.by*H, s=states[n.id]||'healthy', sc=SC[s], r=16;
+      const pulse=0.5+0.5*Math.sin(tick*(s==='critical'?0.1:s==='degraded'?0.07:0.04));
+
+      // Outer pulse ring (critical/degraded only)
+      if(s!=='healthy'){
+        ctx.beginPath(); ctx.arc(x,y,r+9+pulse*5,0,6.28);
+        ctx.strokeStyle=s==='critical'?`rgba(239,68,68,${0.08+pulse*0.1})`:`rgba(245,158,11,${0.06+pulse*0.08})`;
+        ctx.lineWidth=1.5; ctx.stroke();
+      }
+
+      // Mid ring
+      ctx.beginPath(); ctx.arc(x,y,r+4,0,6.28);
+      ctx.strokeStyle=s==='critical'?'rgba(239,68,68,0.18)':s==='degraded'?'rgba(245,158,11,0.14)':'rgba(16,185,129,0.08)';
+      ctx.lineWidth=1; ctx.stroke();
+
+      // Fill
+      ctx.beginPath(); ctx.arc(x,y,r,0,6.28);
+      ctx.fillStyle=sc.fill; ctx.fill();
+
+      // Stroke
+      ctx.strokeStyle=sc.stroke; ctx.lineWidth=s==='critical'?2:1.5;
+      ctx.shadowColor=sc.glow; ctx.shadowBlur=s==='healthy'?6:14;
+      ctx.stroke(); ctx.shadowBlur=0;
+
+      // Inner dot
+      ctx.beginPath(); ctx.arc(x,y,4.5,0,6.28);
+      ctx.fillStyle=sc.dot; ctx.shadowColor=sc.dot; ctx.shadowBlur=8; ctx.fill(); ctx.shadowBlur=0;
+
+      // Service name
+      ctx.font="bold 10px 'JetBrains Mono',monospace"; ctx.textAlign='center';
+      ctx.fillStyle='rgba(255,255,255,0.75)';
+      ctx.fillText(n.label, x, y+r+14);
+
+      // Role tag (smaller, below)
+      ctx.font="9px 'JetBrains Mono',monospace";
+      ctx.fillStyle=sc.stroke+'99';
+      ctx.fillText(n.role, x, y+r+25);
+    }
+
+    // ── STORY OVERLAY CARD ──
+    const p=story.phase;
+    if(p!=='MONITORING'){
+      const fadeIn=Math.min(phaseT/18,1);
+      const cardW=240, cardH= p==='ANALYZING'?118:56;
+      const cx=W/2-cardW/2, cy=H*0.24;
+
+      // Card shadow
+      ctx.shadowColor='rgba(0,0,0,0.6)'; ctx.shadowBlur=24;
+      ctx.fillStyle=`rgba(8,8,16,${0.94*fadeIn})`;
+      rrect(cx,cy,cardW,cardH,10); ctx.fill(); ctx.shadowBlur=0;
+
+      // Border
+      const bCol=p==='RESOLVED'?'#10B981':p==='ANOMALY'?'#EF4444':p==='ANALYZING'?'#8B5CF6':'#F59E0B';
+      ctx.strokeStyle=bCol+(Math.round(fadeIn*80).toString(16).padStart(2,'0'));
+      ctx.lineWidth=1; rrect(cx,cy,cardW,cardH,10); ctx.stroke();
+
+      // Top accent line
+      const grad=ctx.createLinearGradient(cx,0,cx+cardW,0);
+      grad.addColorStop(0,'transparent'); grad.addColorStop(0.5,bCol); grad.addColorStop(1,'transparent');
+      ctx.fillStyle=grad; ctx.fillRect(cx+10,cy,cardW-20,1.5);
+
+      // Phase label
+      ctx.globalAlpha=fadeIn;
+      ctx.font="bold 12px 'JetBrains Mono',monospace"; ctx.textAlign='center';
+      ctx.fillStyle=bCol; ctx.fillText(
+        p==='ANOMALY'?'⚠  ANOMALY DETECTED':p==='ANALYZING'?'  AI ANALYZING...':p==='MITIGATING'?'⚡  MITIGATING':'✓  RESOLVED — 4m 32s',
+        cx+cardW/2, cy+22
+      );
+
+      if(p==='ANALYZING'){
+        // Spinner
+        ctx.save(); ctx.translate(cx+26, cy+68); ctx.rotate(tick*0.14);
+        ctx.beginPath(); ctx.arc(0,0,9,0,Math.PI*1.6);
+        ctx.strokeStyle='#8B5CF6'; ctx.lineWidth=2; ctx.stroke(); ctx.restore();
+
+        ctx.font="10px 'JetBrains Mono',monospace"; ctx.textAlign='left';
+        ctx.fillStyle='rgba(255,255,255,0.5)';
+        ctx.fillText('Groq → Gemini → Claude', cx+44, cy+63);
+        ctx.fillStyle='rgba(255,255,255,0.25)';
+        ctx.fillText('Analyzing 1,247 log lines…', cx+44, cy+80);
+
+        // Progress bar
+        const progress=(phaseT/story.dur);
+        ctx.fillStyle='rgba(255,255,255,0.07)';
+        rrect(cx+16,cy+95,cardW-32,4,2); ctx.fill();
+        const pGrad=ctx.createLinearGradient(cx+16,0,cx+16+(cardW-32)*progress,0);
+        pGrad.addColorStop(0,'#3B82F6'); pGrad.addColorStop(1,'#8B5CF6');
+        ctx.fillStyle=pGrad;
+        rrect(cx+16,cy+95,(cardW-32)*progress,4,2); ctx.fill();
+      } else if(p==='RESOLVED'){
+        ctx.font="10px 'JetBrains Mono',monospace"; ctx.textAlign='center';
+        ctx.fillStyle='rgba(255,255,255,0.35)';
+        ctx.fillText('AI confidence: 94% · Root cause identified', cx+cardW/2, cy+40);
+      }
+
+      ctx.globalAlpha=1;
+    }
+
+    // ── PHASE LABEL (top-left) ──
+    ctx.font="10px 'JetBrains Mono',monospace"; ctx.textAlign='left';
+    ctx.fillStyle='rgba(255,255,255,0.15)';
+    ctx.fillText('● LIVE  SVC TOPOLOGY', 14, 20);
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ── HEADLINE SCRAMBLE ──────────────────────────────────────────────────── */
+(function(){
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const el = document.getElementById('scramble-1');
+  const final = 'Resolve';
+  let iter = 0;
+  const iv = setInterval(()=>{
+    el.textContent = final.split('').map((c,i)=>i<iter?c:chars[Math.floor(Math.random()*chars.length)]).join('');
+    if(iter >= final.length) clearInterval(iv);
+    iter += 0.35;
+  }, 40);
+})();
+
+/* ── SCROLL REVEAL ──────────────────────────────────────────────────────── */
+(function(){
+  const obs = new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); }),{threshold:0.1});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+})();
+
+/* ── STAT COUNTERS ──────────────────────────────────────────────────────── */
+(function(){
+  const obs = new IntersectionObserver(es=>es.forEach(e=>{
+    if(!e.isIntersecting) return; obs.unobserve(e.target);
+    const el=e.target, target=parseFloat(el.dataset.v), suf=el.dataset.suf||'', dec=parseInt(el.dataset.dec||0);
+    let start=null;
+    (function step(ts){
+      if(!start) start=ts;
+      const p=Math.min((ts-start)/1400,1), ease=1-Math.pow(1-p,3), v=target*ease;
+      el.textContent=(dec>0?v.toFixed(dec):Math.round(v).toLocaleString())+suf;
+      if(p<1) requestAnimationFrame(step);
+    })(performance.now());
+  }),{threshold:0.5});
+  document.querySelectorAll('[data-v]').forEach(el=>obs.observe(el));
+})();
+
+/* ── TERMINAL ANIMATION ─────────────────────────────────────────────────── */
+(function(){
+  const body = document.getElementById('term-body');
+  const LINES = [
+    {delay:600,  cls:'tc-muted', text:'Connecting to telemetry pipeline...'},
+    {delay:900,  cls:'tc-green', text:'✓ Connected — payments-api, postgres-primary'},
+    {delay:1300, cls:'tc-muted', text:''},
+    {delay:1400, cls:'tc-amber', text:'[Groq]  Parsing 1,247 log lines...'},
+    {delay:2200, cls:'tc-amber', text:'[Groq]  Anomaly type: connection_pool_exhaustion'},
+    {delay:2700, cls:'tc-amber', text:'[Groq]  Processing time: 1.2s'},
+    {delay:3000, cls:'tc-muted', text:''},
+    {delay:3100, cls:'tc-blue',  text:'[Gemini] Correlating with deploy history...'},
+    {delay:3900, cls:'tc-blue',  text:'[Gemini] Matched: deploy v2.14.1 (+idle_timeout 300s)'},
+    {delay:4400, cls:'tc-blue',  text:'[Gemini] Processing time: 2.1s'},
+    {delay:4700, cls:'tc-muted', text:''},
+    {delay:4800, cls:'tc-purple',text:'[Claude] Synthesizing root cause...'},
+    {delay:5800, cls:'tc-purple',text:'[Claude] Root cause: idle_timeout misconfiguration'},
+    {delay:6300, cls:'tc-purple',text:'[Claude] 847 idle connections occupying all pool slots'},
+    {delay:6700, cls:'tc-purple',text:'[Claude] Processing time: 1.8s'},
+    {delay:7000, cls:'tc-muted', text:''},
+    {delay:7100, cls:'tc-white', text:'────────────────────────────────────────'},
+    {delay:7200, cls:'tc-green', text:'✓ ROOT CAUSE IDENTIFIED  (confidence: 94%)'},
+    {delay:7400, cls:'tc-white', text:'  payments-api DB pool exhausted by idle_timeout=300s'},
+    {delay:7600, cls:'tc-white', text:'  introduced in deploy v2.14.1 at 14:21 UTC'},
+    {delay:7800, cls:'tc-muted', text:''},
+    {delay:7900, cls:'tc-amber', text:'  FIX (LOW risk):'},
+    {delay:8100, cls:'tc-muted', text:'  kubectl set env deployment/payments-api DB_POOL_IDLE_TIMEOUT=30000'},
+    {delay:8400, cls:'tc-muted', text:''},
+    {delay:8500, cls:'tc-green', text:'✓ Analysis complete · Total time: 5.1s'},
+  ];
+
+  const obs = new IntersectionObserver(es => {
+    if(!es[0].isIntersecting) return;
+    obs.unobserve(body);
+    LINES.forEach(({delay, cls, text}) => {
+      setTimeout(()=>{
+        const line = document.createElement('div');
+        line.className = 'term-line';
+        if(text === '') { line.innerHTML = '&nbsp;'; }
+        else { line.innerHTML = `<span class="${cls}">${text}</span>`; }
+        body.appendChild(line);
+        body.scrollTop = body.scrollHeight;
+      }, delay);
+    });
+  }, {threshold: 0.4});
+  obs.observe(body);
+})();
+</script>
+</body>
+</html>
