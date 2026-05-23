@@ -32,6 +32,7 @@ from models import (
     AgentStartRequest,
     AnalyzeRequest,
     ChaosRequest,
+    ChatRequest,
     IngestRequest,
     IntegrationSyncRequest,
     SlackAlertRequest,
@@ -385,6 +386,37 @@ async def voice_speak(req: SpeakRequest):
     except Exception as exc:
         logger.error(f"TTS error: {exc}")
         _fail(str(exc))
+
+
+# ── /api/chat ─────────────────────────────────────────────────────────────────
+
+@app.post("/api/chat")
+async def chat(req: ChatRequest):
+    """Conversational SRE assistant. Answers with OpenAI, grounded in the
+    selected incident's full analysis (Groq triage + Gemini correlation +
+    OpenAI root cause) when an incident_id is provided."""
+    if not req.message.strip():
+        _fail("message is required", 400)
+
+    context: dict = {}
+    if req.incident_id:
+        incident = incident_store.get_incident(req.incident_id)
+        if incident:
+            context = {
+                "incident_id": incident.get("incident_id"),
+                "severity": incident.get("severity"),
+                "affected_services": incident.get("affected_services"),
+                "triage": incident.get("triage"),
+                "correlations": incident.get("correlations"),
+                "root_cause": incident.get("root_cause"),
+            }
+
+    try:
+        answer = await answer_question(req.message, context)
+    except Exception as exc:
+        logger.error(f"Chat error: {exc}")
+        _fail(str(exc))
+    return _ok({"response": answer, "incident_id": req.incident_id})
 
 
 # ── /api/voice/listen (WebSocket) ─────────────────────────────────────────────

@@ -20,6 +20,11 @@ class SpeakRequest(BaseModel):
     text: str
 
 
+class ChatRequest(BaseModel):
+    message: str
+    incident_id: Optional[str] = None
+
+
 class ChaosRequest(BaseModel):
     scenario: str  # db_connection_leak | memory_leak | api_cascade
 

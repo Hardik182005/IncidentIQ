@@ -421,7 +421,7 @@
               }
             </main>
           </div>
-          <VoiceOrb externalMessage={orbMsg} onExternalDone={()=>setOrbMsg(null)} />
+          <VoiceOrb externalMessage={orbMsg} onExternalDone={()=>setOrbMsg(null)} incidentId={selected?.id} />
         </div>
       );
     }

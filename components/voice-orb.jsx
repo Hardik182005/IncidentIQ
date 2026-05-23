@@ -3,6 +3,12 @@
 // =============================================
 const { useState, useEffect, useRef } = React;
 
+// Same-origin when served by the FastAPI backend (Cloud Run); falls back to a
+// local dev server when the page is opened directly from disk.
+const API_BASE = (typeof location !== 'undefined' && location.protocol.startsWith('http'))
+  ? '' : 'http://127.0.0.1:8000';
+
+// Fallback replies used only when the /api/chat call fails (offline demo mode).
 const RESPONSES = [
   'Root cause confirmed: PostgreSQL connection pool exhaustion on payments-api. The idle_timeout was set to 300s in the last deploy. I recommend draining idle connections and scaling the pool to 200 immediately.',
   'The auth-service JWT latency spike correlates with the cert renewal 11 minutes ago. The JWKS endpoint cache appears stale — force a cache refresh on all auth-service pods.',
@@ -11,7 +17,7 @@ const RESPONSES = [
 
 const CHIPS = ['What\'s the root cause?', 'How do I fix this?', 'Which service is affected?'];
 
-function VoiceOrb({ externalMessage, onExternalDone }) {
+function VoiceOrb({ externalMessage, onExternalDone, incidentId }) {
   const [state, setState] = useState('idle');
   const [bars, setBars]   = useState([30, 50, 40, 60, 35]);
   const [transcript, setTranscript] = useState('');
@@ -42,27 +48,47 @@ function VoiceOrb({ externalMessage, onExternalDone }) {
     barLoop.current = setInterval(() => setBars(Array.from({length:5}, () => 15 + Math.random()*70)), 90);
   }
 
+  async function askBackend(question) {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: question, incident_id: incidentId || null }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data) throw new Error(data?.error || `HTTP ${res.status}`);
+    // Backend wraps payloads as { success, data: { response }, error }.
+    const answer = data.data?.response ?? data.response;
+    if (!answer) throw new Error('empty response');
+    return answer;
+  }
+
   function activate(query) {
     if (state !== 'idle') return;
     clearAll(); setShowChips(false); setTranscript(''); setResponse('');
     setState('listening');
     startBars();
+    const question = query || 'What is the current incident status?';
 
     const t1 = setTimeout(() => {
       clearInterval(barLoop.current); setState('processing');
-      typewrite(query || 'What is the current incident status?', setTranscript);
+      typewrite(question, setTranscript);
 
-      const t2 = setTimeout(() => {
-        setState('speaking');
-        startBars();
-        typewrite(RESPONSES[Math.floor(Math.random() * RESPONSES.length)], setResponse);
+      // Real conversational answer from the 3-stage pipeline's OpenAI layer;
+      // canned reply only if the backend is unreachable (static demo).
+      askBackend(question)
+        .catch(() => RESPONSES[Math.floor(Math.random() * RESPONSES.length)])
+        .then(answer => {
+          setState('speaking');
+          startBars();
+          setResponse('');
+          typewrite(answer, setResponse);
 
-        const t3 = setTimeout(() => {
-          clearAll(); setState('idle'); setTranscript(''); setResponse(''); setShowChips(true);
-        }, 6000);
-        timers.current.push(t3);
-      }, 2200);
-      timers.current.push(t2);
+          const hold = Math.min(16000, 4500 + answer.length * 28);
+          const t3 = setTimeout(() => {
+            clearAll(); setState('idle'); setTranscript(''); setResponse(''); setShowChips(true);
+          }, hold);
+          timers.current.push(t3);
+        });
     }, 2800);
     timers.current.push(t1);
   }
