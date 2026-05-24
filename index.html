@@ -349,7 +349,7 @@
 function seedProviders(){
   const b=document.getElementById('seedBtn'); if(!b) return;
   const orig=b.textContent; b.textContent='Pushing…'; b.disabled=true;
-  fetch('/api/integrations/seed',{method:'POST'})
+  fetch('/api/integrations/seed',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})
     .then(r=>r.json())
     .then(d=>{
       const s=(d&&d.data)||{}; const ok=[],need=[];
