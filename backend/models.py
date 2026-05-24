@@ -48,3 +48,16 @@ class IntegrationSyncRequest(BaseModel):
     providers: Optional[List[str]] = None
     window_minutes: Optional[int] = 10
     auto_analyze: Optional[bool] = True
+
+
+class RunbookStep(BaseModel):
+    text: str
+    cmd: str = ""
+
+
+class RunbookCreateRequest(BaseModel):
+    title: str
+    cat: str = "service"  # database | memory | network | service | security
+    desc: str = ""
+    ai: bool = False
+    steps_detail: List[RunbookStep] = Field(default_factory=list)

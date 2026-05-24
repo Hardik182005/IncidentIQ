@@ -35,6 +35,7 @@ from models import (
     ChatRequest,
     IngestRequest,
     IntegrationSyncRequest,
+    RunbookCreateRequest,
     SlackAlertRequest,
     SpeakRequest,
 )
@@ -46,7 +47,7 @@ from services.groq_service import triage_logs, transcribe_audio, health_check as
 from services.monitoring_agent import agent
 from services.openai_service import analyze_root_cause, answer_question, health_check as openai_health
 from services.slack_service import send_incident_alert
-from store import incident_store, ws_manager
+from store import incident_store, ws_manager, runbook_store
 
 
 @asynccontextmanager
@@ -705,6 +706,27 @@ async def slack_notify(req: SlackAlertRequest):
         _fail("Incident not found", 404)
     sent = await send_incident_alert(incident)
     return _ok({"sent": sent, "incident_id": req.incident_id})
+
+
+# ── /api/runbooks ─────────────────────────────────────────────────────────────
+
+@app.get("/api/runbooks")
+async def list_runbooks():
+    return _ok(runbook_store.get_all())
+
+
+@app.post("/api/runbooks")
+async def create_runbook(req: RunbookCreateRequest):
+    if not req.title.strip():
+        _fail("title is required", 400)
+    record = runbook_store.create({
+        "title": req.title.strip(),
+        "cat": req.cat,
+        "desc": req.desc,
+        "ai": req.ai,
+        "steps_detail": [s.dict() for s in req.steps_detail],
+    })
+    return _ok(record)
 
 
 # ── /api/integrations ─────────────────────────────────────────────────────────

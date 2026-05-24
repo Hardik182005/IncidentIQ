@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IncidentIQ — SRE War Room</title>
+  <title>IncidentIQ — SRE Command Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
   <style>
@@ -19,10 +19,10 @@
       width:100%;height:100%;
       background-color:var(--bg);
       background-image:
-        radial-gradient(circle, rgba(59,130,246,0.18) 1.5px, transparent 1.5px),
-        radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px),
-        linear-gradient(rgba(59,130,246,0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(59,130,246,0.06) 1px, transparent 1px);
+        radial-gradient(circle, rgba(255,255,255,0.20) 1.5px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
       background-size:
         88px 88px,
         22px 22px,
@@ -334,7 +334,7 @@
     function IncidentFeed({ incidents, onAnalyze, onTrigger }) {
       const active = incidents.filter(i=>i.status==='ACTIVE'||i.status==='ANALYZING').length;
       return (
-        <div style={{flex:'0 0 58%',display:'flex',flexDirection:'column',padding:'16px',borderRight:'1px solid rgba(255,255,255,0.055)',overflow:'hidden'}}>
+        <div style={{flex:1,minHeight:0,display:'flex',flexDirection:'column',padding:'16px',borderBottom:'1px solid rgba(255,255,255,0.07)',overflow:'hidden'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'14px',flexShrink:0}}>
             <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
               <div style={{position:'relative',width:'10px',height:'10px'}}>
@@ -353,15 +353,12 @@
       );
     }
 
-    function MetricsPanel() {
+    function TopologyPanel() {
       return (
-        <div style={{flex:1,display:'flex',flexDirection:'column',padding:'16px',overflow:'hidden'}}>
-          <div style={{color:'#52526a',fontSize:'10px',letterSpacing:'0.1em',marginBottom:'12px',flexShrink:0,textTransform:'uppercase'}}>Live Telemetry</div>
-          <div style={{flex:1,overflowY:'auto'}}>
-            <ServiceTopology />
-            <MetricChart title="Error Rate"     color="#EF4444" baseVal={2.3}  variance={2.2}  spikeIdx={45} unit="%" height={78} />
-            <MetricChart title="Latency P99"    color="#F59E0B" baseVal={288}  variance={110}  spikeIdx={45} unit="ms" height={78} />
-            <MetricChart title="Requests / sec" color="#06B6D4" baseVal={1245} variance={290}  spikeIdx={null} unit="/s" height={78} />
+        <div style={{flexShrink:0,padding:'12px 16px 16px',background:'rgba(255,255,255,0.012)',maxHeight:'40%',overflowY:'auto'}}>
+          <ServiceTopology />
+          <div style={{color:'#9898b0',fontSize:'10px',marginTop:'2px',fontFamily:"'JetBrains Mono',monospace"}}>
+            Full error-rate, latency &amp; throughput charts live on the <a href="metrics.html" style={{color:'#cbd5e1',textDecoration:'underline'}}>Metrics</a> page.
           </div>
         </div>
       );
@@ -370,10 +367,8 @@
     function Dashboard({ incidents, onAnalyze, onTrigger }) {
       return (
         <div style={{height:'100%',display:'flex',flexDirection:'column',overflow:'hidden'}}>
-          <div style={{flex:1,display:'flex',minHeight:0}}>
-            <IncidentFeed incidents={incidents} onAnalyze={onAnalyze} onTrigger={onTrigger} />
-            <MetricsPanel />
-          </div>
+          <IncidentFeed incidents={incidents} onAnalyze={onAnalyze} onTrigger={onTrigger} />
+          <TopologyPanel />
         </div>
       );
     }
@@ -381,7 +376,14 @@
     /* ── APP SHELL ───────────────────────────────────── */
     function Sidebar({ incidents, view, onNavigate }) {
       const critCount = incidents.filter(i=>i.severity==='CRITICAL'&&i.status!=='RESOLVED').length;
-      const nav = [{id:'dashboard',label:'War Room',icon:'◈'},{id:'incidents',label:'Incidents',icon:'⬡',badge:critCount},{id:'metrics',label:'Metrics',icon:'◎'},{id:'alerts',label:'Alerts',icon:'◇'},{id:'runbooks',label:'Runbooks',icon:'▷'}];
+      const ic = (c)=>(<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{verticalAlign:'middle'}}>{c}</svg>);
+      const nav = [
+        {id:'dashboard',label:'Command Center',icon:ic(<g><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></g>)},
+        {id:'incidents',label:'Incidents',icon:ic(<g><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></g>),badge:critCount},
+        {id:'metrics',label:'Metrics',icon:ic(<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>)},
+        {id:'alerts',label:'Alerts',icon:ic(<g><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></g>)},
+        {id:'runbooks',label:'Runbooks',icon:ic(<g><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></g>)},
+      ];
       const providers = [{name:'Groq',lat:'12ms'},{name:'Gemini',lat:'34ms'},{name:'OpenAI',lat:'28ms'}];
       return (
         <div style={{width:'218px',flexShrink:0,background:'rgba(6,6,8,0.92)',borderRight:'1px solid rgba(255,255,255,0.18)',display:'flex',flexDirection:'column',backdropFilter:'blur(16px)'}}>
@@ -395,7 +397,7 @@
               </div>
               <div>
                 <div style={{color:'#ffffff',fontWeight:'700',fontSize:'15px',letterSpacing:'-0.03em',lineHeight:1.1}}>IncidentIQ</div>
-                <div style={{color:'#cbd5e1',fontSize:'9px',letterSpacing:'0.12em',textTransform:'uppercase',fontWeight:'700'}}>SRE War Room</div>
+                <div style={{color:'#cbd5e1',fontSize:'9px',letterSpacing:'0.12em',textTransform:'uppercase',fontWeight:'700'}}>SRE Command Center</div>
               </div>
             </div>
           </div>
@@ -483,45 +485,65 @@
         }
       }
 
-      // 1. Fetch historical incidents from /api/incidents on mount
+      // Normalize an /api incident into the UI incident shape (shared by fetch + WS).
+      function mapApiIncident(api, isNew) {
+        return {
+          id: api.incident_id,
+          severity: (api.severity || 'critical').toUpperCase(),
+          service: api.affected_services && api.affected_services.length > 0 ? api.affected_services[0] : 'unknown',
+          region: api.sources && api.sources.length > 0 ? api.sources[0] : 'us-east-1',
+          timestamp: isNew ? 'Just now' : formatTimeAgo(api.timestamp),
+          rootCause: api.root_cause_summary || (api.root_cause && api.root_cause.root_cause) || 'Analyzing incident...',
+          confidence: (api.confidence || api.confidence === 0) ? Math.round(api.confidence * 100) : 94,
+          status: (api.status || 'active').toUpperCase(),
+          elapsed: isNew ? 0 : (api.processing_ms ? Math.round(api.processing_ms / 1000) : 120),
+          tags: api.affected_services || [],
+          isNew: !!isNew,
+          affected_services: api.affected_services || [],
+          raw: api
+        };
+      }
+
+      // Deep link: ?incident=<id> (Slack "View Dashboard", incidents table row) opens that incident directly.
+      const deepLinkId = (typeof location !== 'undefined') ? new URLSearchParams(location.search).get('incident') : null;
+      const deepLinkDone = useRef(false);
+
+      function openDeepLink(list) {
+        if (deepLinkDone.current || !deepLinkId) return;
+        deepLinkDone.current = true;
+        let match = list.find(i => i.id === deepLinkId);
+        if (!match) {
+          // Incident not in store (cold start) or a demo INC-id — open a graceful detail view anyway.
+          match = {
+            id: deepLinkId, severity: 'CRITICAL', service: 'incident', region: 'us-east-1',
+            timestamp: 'Just now', rootCause: 'Loading incident analysis…', confidence: 94,
+            status: 'ACTIVE', elapsed: 0, tags: [], isNew: true, affected_services: [], raw: {}
+          };
+        }
+        setSelected(match);
+        setView('incident');
+      }
+
+      // 1. Fetch historical incidents from /api/incidents on mount, then resolve any deep link.
       useEffect(() => {
         async function fetchIncidents() {
+          let combined = [...INITIAL_INCIDENTS];
           try {
             const res = await fetch(`${API_BASE}/api/incidents`);
             const data = await res.json();
             if (res.ok && data && data.success) {
               const apiIncidents = data.data || [];
-              if (apiIncidents.length > 0) {
-                const mapped = apiIncidents.map(api => ({
-                  id: api.incident_id,
-                  severity: api.severity.toUpperCase(),
-                  service: api.affected_services && api.affected_services.length > 0 ? api.affected_services[0] : 'unknown',
-                  region: api.sources && api.sources.length > 0 ? api.sources[0] : 'us-east-1',
-                  timestamp: formatTimeAgo(api.timestamp),
-                  rootCause: api.root_cause_summary || api.root_cause?.root_cause || 'Analyzing incident...',
-                  confidence: api.confidence ? Math.round(api.confidence * 100) : 94,
-                  status: api.status.toUpperCase(),
-                  elapsed: api.processing_ms ? Math.round(api.processing_ms / 1000) : 120,
-                  tags: api.affected_services || [],
-                  isNew: false,
-                  affected_services: api.affected_services || [],
-                  raw: api
-                }));
-                // Merge API incidents with INITIAL_INCIDENTS, filtering out duplicates
-                setIncidents(prev => {
-                  const combined = [...mapped];
-                  INITIAL_INCIDENTS.forEach(ini => {
-                    if (!combined.some(c => c.id === ini.id)) {
-                      combined.push(ini);
-                    }
-                  });
-                  return combined;
-                });
-              }
+              const mapped = apiIncidents.map(api => mapApiIncident(api, false));
+              combined = [...mapped];
+              INITIAL_INCIDENTS.forEach(ini => {
+                if (!combined.some(c => c.id === ini.id)) combined.push(ini);
+              });
+              setIncidents(combined);
             }
           } catch (e) {
             console.error("Failed to fetch incidents", e);
           }
+          openDeepLink(combined);
         }
         fetchIncidents();
       }, []);
@@ -544,36 +566,24 @@
           try {
             const msg = JSON.parse(event.data);
             if (msg.type === 'new_incident') {
-              const api = msg.data;
-              const mapped = {
-                id: api.incident_id,
-                severity: api.severity.toUpperCase(),
-                service: api.affected_services && api.affected_services.length > 0 ? api.affected_services[0] : 'unknown',
-                region: api.sources && api.sources.length > 0 ? api.sources[0] : 'us-east-1',
-                timestamp: 'Just now',
-                rootCause: api.root_cause_summary || api.root_cause?.root_cause || 'Analyzing incident...',
-                confidence: api.confidence ? Math.round(api.confidence * 100) : 94,
-                status: api.status.toUpperCase(),
-                elapsed: 0,
-                tags: api.affected_services || [],
-                isNew: true,
-                affected_services: api.affected_services || [],
-                raw: api
-              };
-              
+              const mapped = mapApiIncident(msg.data, true);
+
               setIncidents(prev => {
                 if (prev.some(i => i.id === mapped.id)) return prev;
                 return [mapped, ...prev];
               });
-              
+
               // Spoken notification from voice orb
               setOrbMsg(`Critical incident detected on ${mapped.service}. Analyzing root cause now.`);
-              
-              // Trigger header alert flash & redirect to the new incident page
+
+              // Trigger header alert flash & redirect to the new incident page — unless the
+              // user arrived via a ?incident= deep link, in which case don't steal their view.
               setFlash(mapped.service + ' incident');
               setTimeout(() => {
-                setSelected(mapped);
-                setView('incident');
+                if (!deepLinkId) {
+                  setSelected(mapped);
+                  setView('incident');
+                }
                 setFlash(null);
               }, 2000);
             }

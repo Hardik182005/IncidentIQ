@@ -37,6 +37,12 @@ async def send_incident_alert(incident: Dict[str, Any]) -> bool:
     affected = triage_obj.get("affected_services", incident.get("affected_services", []))
     first_fix = fix_commands[0] if fix_commands else "No fix command available"
     processing_ms = incident.get("total_processing_ms", incident.get("processing_ms", 0))
+    scenario = incident.get("scenario", "")
+
+    dashboard_url = f"{frontend_url}/screens/dashboard.html?incident={incident_id}"
+    runbook_url = f"{frontend_url}/screens/runbooks.html?incident={incident_id}"
+    if scenario:
+        runbook_url += f"&scenario={scenario}"
 
     payload = {
         "blocks": [
@@ -85,13 +91,13 @@ async def send_incident_alert(incident: Dict[str, Any]) -> bool:
                     {
                         "type": "button",
                         "text": {"type": "plain_text", "text": "View Dashboard", "emoji": True},
-                        "url": f"{frontend_url}/screens/dashboard.html?incident={incident_id}",
+                        "url": dashboard_url,
                         "style": "primary",
                     },
                     {
                         "type": "button",
                         "text": {"type": "plain_text", "text": "Open Runbook", "emoji": True},
-                        "url": f"{frontend_url}/screens/runbooks.html",
+                        "url": runbook_url,
                     },
                 ],
             },
