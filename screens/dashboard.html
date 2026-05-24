@@ -255,7 +255,7 @@
                   </div>
                   <button onClick={()=>copy(idx,fix.cmd)} style={{background:copied===idx?'rgba(16,185,129,0.14)':'rgba(255,255,255,0.06)',border:`1px solid ${copied===idx?'rgba(16,185,129,0.28)':'rgba(255,255,255,0.09)'}`,color:copied===idx?'#10B981':'#9898b0',borderRadius:'5px',padding:'3px 10px',fontSize:'10px',cursor:'pointer',fontFamily:"'Space Grotesk',sans-serif",transition:'all 0.2s'}}>{copied===idx?'✓ Copied':'Copy'}</button>
                 </div>
-                <pre style={{padding:'11px 13px',color:'#9898b0',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace",lineHeight:'1.7',overflowX:'auto',whiteSpace:'pre'}}><code>{fix.cmd}</code></pre>
+                <pre style={{padding:'11px 13px',color:'#cbd5e1',fontSize:'11.5px',fontFamily:"'JetBrains Mono',monospace",lineHeight:'1.65',whiteSpace:'pre-wrap',wordBreak:'break-word',overflowWrap:'anywhere',margin:0}}><code>{fix.cmd}</code></pre>
               </div>
             ))}
             <div style={{display:'flex',gap:'8px',paddingTop:'2px'}}>
@@ -312,9 +312,9 @@
             </div>
           </div>
           <div style={{flex:1,display:'flex',gap:'12px',minHeight:0}}>
-            <div style={{flex:'0 0 32%',minHeight:0}}><AIAnalysisPanel incident={incident} onSpeak={onSpeak} /></div>
-            <div style={{flex:'0 0 38%',minHeight:0}}><EvidencePanel logs={realLogs} /></div>
-            <div style={{flex:'0 0 30%',minHeight:0}}><FixCommandsPanel incident={incident} /></div>
+            <div style={{flex:'0 0 30%',minHeight:0}}><AIAnalysisPanel incident={incident} onSpeak={onSpeak} /></div>
+            <div style={{flex:'0 0 33%',minHeight:0}}><EvidencePanel logs={realLogs} /></div>
+            <div style={{flex:'0 0 37%',minHeight:0}}><FixCommandsPanel incident={incident} /></div>
           </div>
 
           <div style={{flexShrink:0}}><HorizontalTimeline /></div>
