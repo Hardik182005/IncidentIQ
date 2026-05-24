@@ -4,6 +4,9 @@
 
 ### The AI SRE that finds the root cause while you're still reading the alert.
 
+### 👥 Team **Kryptonite**
+**Leader:** Hardik Hinduja &nbsp;·&nbsp; **Member:** Avinash Gehi
+
 **Meet IQSentry** — an autonomous Site-Reliability agent that plugs into Datadog, Grafana & New Relic, reads your live telemetry, runs a **three-model AI pipeline**, and hands you the root cause, an evidence trail, ready-to-run fix commands, a Slack alert, and a spoken briefing — in **under 15 seconds**.
 
 <br>
