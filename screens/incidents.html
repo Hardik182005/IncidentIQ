@@ -161,7 +161,7 @@
       <div class="ts"><div class="tl">ACTIVE</div><div class="tv" style="color:var(--red)">2</div></div>
       <div class="ts"><div class="tl">RESOLVED TODAY</div><div class="tv" style="color:var(--green)">12</div></div>
       <div class="ts"><div class="tl">AVG MTTR</div><div class="tv" style="color:var(--cyan)">4m 32s</div></div>
-      <div class="topbar-time" id="clock">--:--:-- UTC</div>
+      <div class="topbar-time" id="clock">--:--:-- IST</div>
     </div>
 
     <div class="content">
@@ -346,7 +346,7 @@ renderTable();
 fetchRealIncidents();
 
 // Clock
-setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false})+' UTC'},1000);
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false,timeZone:'Asia/Kolkata'})+' IST'},1000);
 
 </script>
 </body>

@@ -125,7 +125,7 @@
       <div class="ts"><div class="tl">RULES CONFIGURED</div><div class="tv" style="color:var(--text)">12</div></div>
       <div class="ts"><div class="tl">CHANNELS</div><div class="tv" style="color:var(--green)">4</div></div>
       <div class="ts"><div class="tl">ALERTS TODAY</div><div class="tv" style="color:var(--amber)">7</div></div>
-      <div class="topbar-time" id="clock">--:--:-- UTC</div>
+      <div class="topbar-time" id="clock">--:--:-- IST</div>
     </div>
 
     <div class="content">
@@ -143,7 +143,7 @@
             <div class="alert-desc">Current: 8.7% · Threshold: 5.0% · Duration: 12m 43s</div>
             <div class="alert-meta">
               <span class="sev-pill" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2)">CRITICAL</span>
-              <span class="ameta">Fired: 14:22 UTC</span>
+              <span class="ameta">Fired: 14:22 IST</span>
               <span class="ameta">Rule: error-rate-threshold</span>
               <span class="ameta">Notified: Slack #incidents, PagerDuty</span>
             </div>
@@ -161,7 +161,7 @@
             <div class="alert-desc">Current: 312ms · Threshold: 300ms · Duration: 8m 17s</div>
             <div class="alert-meta">
               <span class="sev-pill" style="background:rgba(249,115,22,0.1);color:#F97316;border:1px solid rgba(249,115,22,0.2)">HIGH</span>
-              <span class="ameta">Fired: 14:26 UTC</span>
+              <span class="ameta">Fired: 14:26 IST</span>
               <span class="ameta">Rule: latency-p99-threshold</span>
               <span class="ameta">Notified: Slack #sre-alerts</span>
             </div>
@@ -179,7 +179,7 @@
             <div class="alert-desc">Current: 12,847 messages · Threshold: 10,000 · Duration: 34m 01s</div>
             <div class="alert-meta">
               <span class="sev-pill" style="background:rgba(245,158,11,0.09);color:var(--amber);border:1px solid rgba(245,158,11,0.2)">MEDIUM</span>
-              <span class="ameta">Fired: 14:00 UTC</span>
+              <span class="ameta">Fired: 14:00 IST</span>
               <span class="ameta">Rule: queue-depth-threshold</span>
               <span class="ameta">Notified: Email</span>
             </div>
@@ -247,7 +247,7 @@
   </div>
 </div>
 <script>
-setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false})+' UTC',1000);
+setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false,timeZone:'Asia/Kolkata'})+' IST',1000);
 </script>
 </body>
 </html>

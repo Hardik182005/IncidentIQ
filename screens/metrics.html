@@ -107,7 +107,7 @@
       <div class="ts"><div class="tl">LATENCY P99</div><div class="tv" style="color:var(--amber)" id="lat-val">284ms</div></div>
       <div class="ts"><div class="tl">THROUGHPUT</div><div class="tv" style="color:var(--cyan)" id="thr-val">1,247/s</div></div>
       <div class="ts"><div class="tl">SERVICES UP</div><div class="tv" style="color:var(--green)">6/7</div></div>
-      <div class="topbar-time" id="clock">--:--:-- UTC</div>
+      <div class="topbar-time" id="clock">--:--:-- IST</div>
     </div>
 
     <div class="content">
@@ -138,7 +138,7 @@
         </div>
         <div class="chart-card">
           <div class="chart-header">
-            <div><div class="chart-title">Request Volume</div><div class="chart-sub">Peak at 08:00 UTC daily</div></div>
+            <div><div class="chart-title">Request Volume</div><div class="chart-sub">Peak at 08:00 IST daily</div></div>
             <div style="text-align:right"><div class="chart-val" style="color:var(--cyan)" id="vol-big">1,247/s</div></div>
           </div>
           <canvas class="chart" id="c-vol"></canvas>
@@ -301,7 +301,7 @@ function updateTopBar(metrics) {
 updateLiveMetrics();
 setInterval(updateLiveMetrics, 2000);
 
-setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false})+' UTC',1000);
+setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false,timeZone:'Asia/Kolkata'})+' IST',1000);
 </script>
 </body>
 </html>

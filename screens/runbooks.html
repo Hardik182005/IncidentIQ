@@ -131,7 +131,7 @@
       <div class="ts"><div class="tl">LAST USED</div><div class="tv" style="color:var(--cyan)">2m ago</div></div>
       <div class="ts"><div class="tl">AUTO-LINKED</div><div class="tv" style="color:var(--green)">7</div></div>
       <div class="ts"><div class="tl">CATEGORIES</div><div class="tv" style="color:var(--purple)">5</div></div>
-      <div class="topbar-time" id="clock">--:--:-- UTC</div>
+      <div class="topbar-time" id="clock">--:--:-- IST</div>
     </div>
 
     <div class="content">
@@ -398,7 +398,7 @@ async function submitRunbook(){
   },80);
 })();
 
-setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false})+' UTC',1000);
+setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false,timeZone:'Asia/Kolkata'})+' IST',1000);
 </script>
 </body>
 </html>

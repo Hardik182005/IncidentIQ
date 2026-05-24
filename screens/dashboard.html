@@ -456,7 +456,7 @@
               <div style={{color:s.color,fontSize:'15px',fontWeight:'700',fontFamily:"'JetBrains Mono',monospace",textShadow:`0 0 10px ${s.color}55`}}>{s.value}</div>
             </div>
           ))}
-          <div style={{marginLeft:'auto',color:'#52526a',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace",letterSpacing:'0.05em'}}>{time.toLocaleTimeString('en-US',{hour12:false})} UTC</div>
+          <div style={{marginLeft:'auto',color:'#52526a',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace",letterSpacing:'0.05em'}}>{time.toLocaleTimeString('en-US',{hour12:false,timeZone:'Asia/Kolkata'})} IST</div>
         </div>
       );
     }
