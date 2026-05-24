@@ -11,7 +11,6 @@
 [![▶ Open the Live App](https://img.shields.io/badge/▶_OPEN_THE_LIVE_APP-Cloud_Run-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)](https://incidentiq-1099197368634.us-central1.run.app)
 
 ### 🔗 Live: **https://incidentiq-1099197368634.us-central1.run.app**
-
 ### 💬 Watch alerts land in real time: **[Join the IncidentIQ Slack →](https://join.slack.com/t/incidentiq-world/shared_invite/zt-3yu7eu01h-cov54rryirD67XPYz97eOw)**
 
 <br>
@@ -22,9 +21,37 @@
 [![Gemini](https://img.shields.io/badge/Gemini-2.0_Flash-8E75B2?style=flat-square&logo=googlegemini&logoColor=white)](https://ai.google.dev)
 [![OpenAI](https://img.shields.io/badge/OpenAI-gpt--4o--mini-412991?style=flat-square&logo=openai&logoColor=white)](https://openai.com)
 [![ElevenLabs](https://img.shields.io/badge/ElevenLabs-Voice-000000?style=flat-square)](https://elevenlabs.io)
+[![Datadog](https://img.shields.io/badge/Datadog-LIVE-632CA6?style=flat-square&logo=datadog&logoColor=white)](https://datadoghq.com)
+[![Grafana](https://img.shields.io/badge/Grafana_Loki-LIVE-F46800?style=flat-square&logo=grafana&logoColor=white)](https://grafana.com)
+[![New Relic](https://img.shields.io/badge/New_Relic-LIVE-00AC69?style=flat-square&logo=newrelic&logoColor=white)](https://newrelic.com)
 [![Cloud Run](https://img.shields.io/badge/Deployed-Cloud_Run-4285F4?style=flat-square&logo=googlecloud&logoColor=white)](https://cloud.google.com/run)
 
 </div>
+
+---
+
+## 🎯 Problem Statement
+
+> ### AI Incident Root Cause Analyzer for SRE Teams
+>
+> **Problem:** During outages, engineers waste valuable time searching logs, dashboards, and alerts to identify the root cause.
+>
+> **Build:** An AI agent that connects with monitoring tools like Datadog, Grafana, or New Relic, analyzes logs and incidents in real-time, identifies probable root causes, and suggests fixes instantly.
+
+---
+
+## ✅ Our Solution
+
+**IncidentIQ** is exactly that agent — built, deployed, and running live. It turns the slowest, most stressful part of incident response into a 15-second automated flow.
+
+| The brief asks for… | IncidentIQ delivers |
+|---|---|
+| **Connect with Datadog, Grafana, New Relic** | ✅ Native connectors to **all three**, via their official APIs — **verified live** (Datadog Logs intake, Grafana Loki, New Relic NerdGraph + Log API). |
+| **Analyze logs & incidents in real-time** | ✅ A **3-model AI cascade** (Groq → Gemini → OpenAI) processes the live log window in seconds and streams incidents over WebSocket. |
+| **Identify probable root cause** | ✅ Returns the root cause with a **real, evidence-derived confidence score**, blast radius, correlated timeline, and the exact log lines that prove it. |
+| **Suggest fixes instantly** | ✅ Generates **risk-rated, copy-paste fix commands** (shell / SQL / kubectl) + a prevention plan, and one-click posts a Slack alert. |
+
+**Plus the things that make it demo-proof:** a **Data Room** that shows real records being pulled from all three tools (tagged by source), a **voice assistant** that answers in your language (English + Hindi, Marathi, Tamil, Gujarati…), a **chaos simulator** with 5 failure scenarios, and a **runbook builder** backed by a real API.
 
 ---
 
@@ -34,34 +61,31 @@
 # 1) Is the brain online?  (Groq · Gemini · OpenAI · ElevenLabs)
 curl https://incidentiq-1099197368634.us-central1.run.app/api/health
 
-# 2) Break something on purpose and watch the AI solve it end-to-end.
-#    Try any of 5 scenarios: database_deadlock | network_latency_spike |
-#    db_connection_leak | memory_leak | api_cascade
+# 2) Are all 3 monitoring tools connected live?
+curl https://incidentiq-1099197368634.us-central1.run.app/api/integrations/status
+
+# 3) Break something on purpose and watch the AI solve it end-to-end.
+#    scenarios: database_deadlock | network_latency_spike | db_connection_leak | memory_leak | api_cascade
 curl -X POST https://incidentiq-1099197368634.us-central1.run.app/api/chaos \
-     -H "Content-Type: application/json" \
-     -d '{"scenario":"database_deadlock"}'
+     -H "Content-Type: application/json" -d '{"scenario":"database_deadlock"}'
+
+# 4) Pull REAL records back from Datadog + Grafana + New Relic
+curl -X POST https://incidentiq-1099197368634.us-central1.run.app/api/integrations/sync \
+     -H "Content-Type: application/json" -d '{"window_minutes":120,"auto_analyze":false}'
 ```
 
-You get back a full incident: **severity, a real confidence score, the probable trigger, blast radius, a causal timeline, exact fix commands, a prevention plan, and a voice summary** — and the same incident is broadcast live over WebSocket to every open dashboard, degrades the affected services on the **Metrics** screen, and fires a **Slack** alert with deep-link buttons.
-
-Then open the app → click **⚡ Trigger Incident** in the Command Center and watch it happen in the UI.
+Step 3 returns a full incident — **severity, real confidence, probable trigger, blast radius, causal timeline, exact fix commands, prevention, and a voice summary** — and broadcasts it to every open dashboard, degrades the affected services on the **Metrics** screen, and fires a **Slack** alert with deep-link buttons.
 
 ---
 
-## 🔥 The problem
-
-During an outage every minute is on fire — and engineers burn the most expensive ones **manually hunting** through logs, dashboards and alerts spread across Datadog, Grafana and New Relic, just to answer one question: *what actually broke?*
-
-## 💡 The solution
-
-IncidentIQ connects to all three monitoring stacks, then runs a **cascading three-stage AI pipeline** that turns raw telemetry into an actionable diagnosis — automatically, in seconds.
+## 🧠 How it works — the 3-model AI pipeline
 
 ```
    LIVE TELEMETRY INGEST                    ┌──────────────────────────────┐
    ┌──────────┬──────────┬──────────┐       │   ARIA — 3-Model AI Pipeline │
    │ Datadog  │ Grafana  │ New Relic│  ───▶  │                              │
    └──────────┴──────────┴──────────┘       │  ① Groq    →  Triage  (<2s)  │
-        official APIs, real logs            │  ② Gemini  →  Correlation    │
+        official APIs · real logs           │  ② Gemini  →  Correlation    │
                                             │  ③ OpenAI  →  Root Cause     │
                                             └───────────────┬──────────────┘
                                                             │
@@ -71,72 +95,108 @@ IncidentIQ connects to all three monitoring stacks, then runs a **cascading thre
   REAL confidence prevention plan     broadcast + UI    (deep links)    (ElevenLabs)
 ```
 
----
-
-## 🏆 Why this one is different
-
-- **The confidence score is real.** Most demos hardcode "92%". IncidentIQ computes it from actual evidence — number of corroborating log lines, whether the correlation stage found a trigger and blast radius, root-cause specificity — so weak incidents honestly score ~0.35 and well-evidenced ones reach 0.95+. It *moves*.
-- **It runs on real monitoring data.** Not mock JSON — live Datadog logs, Grafana Loki queries and New Relic NerdGraph, pulled through their official APIs.
-- **It's stress-tested like production.** We fired 5 simulated companies × 5 failure modes in parallel at the live Cloud Run service; the pipeline held, incidents streamed over WebSocket, and the Metrics screen degraded the right services live.
-- **Slack actually deep-links back.** "View Dashboard" opens the *exact* incident (`?incident=…`); "Open Runbook" jumps straight to the matching procedure for that scenario.
-- **It talks.** Spoken root-cause briefings and voice-driven Q&A over the current incident.
-
----
-
-## ✨ Features
-
-| | Feature | What it does |
-|---|---|---|
-| 🔌 | **Native monitoring connectors** | Live logs, events & metrics from **Datadog**, **Grafana / Loki**, and **New Relic** via official APIs. |
-| 🧠 | **3-stage AI root-cause engine** | **Groq** triages → **Gemini** correlates the cascade → **OpenAI** delivers root cause, fixes, and impact. |
-| 🎯 | **Real evidence-based confidence** | Confidence is *computed* from the evidence, not echoed — it genuinely varies per incident. |
-| ⚡ | **Autonomous agent** | Polls providers on an interval, auto-analyzes anomalies, broadcasts incidents over WebSocket. |
-| 🖥️ | **The Command Center** | Live incident feed + service topology, real-time over `/ws/live`, with a one-click chaos trigger. |
-| 📊 | **Live metrics** | Service health degrades in real time as active incidents come in — driven by `/api/metrics`. |
-| 🧪 | **5 chaos scenarios** | `database_deadlock`, `network_latency_spike`, `db_connection_leak`, `memory_leak`, `api_cascade`. |
-| 🛠️ | **Runbook builder** | Browse AI-linked runbooks **and create your own** — persisted to the backend via `/api/runbooks`. |
-| 🔔 | **Slack alerting w/ deep links** | Block Kit cards whose buttons route back to the exact incident & matching runbook. |
-| 🎙️ | **Voice interface** | ElevenLabs TTS briefings + Groq Whisper voice Q&A over the incident. |
-| 🕒 | **IST clocks** | All timestamps render in India Standard Time (Asia/Kolkata). |
-
----
-
-## 🏗️ Architecture
-
-One Cloud Run service hosts both the **FastAPI** backend and the **static React dashboard**.
-
-```
-incidentiq/
-├── Dockerfile              # Single image: API + bundled UI (served at "/")
-├── index.html              # Landing page (live topology + ingest bar)
-├── screens/                # Command Center, Incidents, Metrics, Alerts, Runbooks
-├── components/             # React components (charts, topology, voice orb, cards)
-└── backend/
-    ├── main.py             # FastAPI — all /api routes + WebSockets
-    ├── models.py           # Pydantic request models
-    ├── store.py            # In-memory incident store, runbook store, WS manager
-    └── services/
-        ├── groq_service.py        # Stage 1 — triage + Whisper transcription
-        ├── gemini_service.py      # Stage 2 — event correlation
-        ├── openai_service.py      # Stage 3 — root cause + real confidence
-        ├── elevenlabs_service.py  # Text-to-speech
-        ├── slack_service.py       # Block Kit alerts w/ deep-link buttons
-        ├── datadog_service.py     # Datadog logs/events connector
-        ├── grafana_service.py     # Grafana + Loki connector
-        ├── newrelic_service.py    # New Relic NerdGraph connector
-        ├── monitoring_agent.py    # Autonomous polling agent
-        └── chaos_service.py       # 5 failure-scenario generators
-```
-
-### The AI pipeline
-
 | Stage | Provider | Model | Job |
 |:---:|---|---|---|
 | **1 · Triage** | Groq | `llama-3.3-70b-versatile` | Anomalies, severity, affected services — sub-second |
 | **2 · Correlation** | Google Gemini | `gemini-2.0-flash` | Link events into a causal timeline + blast radius |
 | **3 · Root Cause** | OpenAI | `gpt-4o-mini` | Root cause, fix commands, prevention, impact, voice summary |
 
-> The pipeline **degrades gracefully** — if any stage is unavailable the others still return a useful partial diagnosis, and confidence drops accordingly.
+Each stage catches its own errors and feeds the next — if one provider is down, the others still return a useful partial diagnosis and **confidence drops honestly** to reflect the missing evidence.
+
+> **The confidence score is real.** Most demos hard-code "92%". IncidentIQ computes it from actual evidence — number of corroborating log lines, whether correlation found a trigger + blast radius, root-cause specificity — so weak incidents score ~0.35 and well-evidenced ones reach 0.95+. It *moves*.
+
+---
+
+## 🔌 Live integrations (verified, not mocked)
+
+All three monitoring tools are wired **bidirectionally** — IncidentIQ can **push** demo telemetry into them *and* **pull** real records back.
+
+| Provider | Connect | Push (seed) | Pull (fetch) | Last live pull |
+|---|:---:|:---:|:---:|:---:|
+| **Datadog** | ✅ | ✅ Logs intake | ✅ Logs/Monitors/Events | **96 records** |
+| **Grafana Loki** | ✅ | ✅ Loki push | ✅ Loki query + alerts | **19 records** |
+| **New Relic** | ✅ | ✅ Log API | ✅ NerdGraph NRQL + aiIssues | **18 records** |
+
+**🟣 The Data Room** (`/screens/integrations.html`) is the proof screen for judges: hit **Seed providers**, then **Pull live data**, and watch real records stream in — **each tagged with its source tool** — with "Open console ↗" links to show the same logs inside Datadog / Grafana / New Relic.
+
+---
+
+## ✨ Full feature set
+
+| | Feature | What it does |
+|---|---|---|
+| 🧠 | **3-stage AI root-cause engine** | Groq triages → Gemini correlates the cascade → OpenAI delivers root cause, fixes & impact. |
+| 🎯 | **Real evidence-based confidence** | Confidence is *computed* from the evidence, not echoed — it genuinely varies per incident. |
+| 🔌 | **Native monitoring connectors** | Live logs, events & alerts from **Datadog**, **Grafana / Loki**, and **New Relic**. |
+| 🟣 | **Data Room** | Live view of records fetched from all three tools, tagged by source, with seed + pull controls. |
+| 🖥️ | **Command Center** | Live incident feed + service topology, streaming over `/ws/live`, with a one-click chaos trigger. |
+| 📊 | **Live Metrics** | Per-service health degrades in real time as active incidents arrive. |
+| 🧪 | **5 chaos scenarios** | `database_deadlock`, `network_latency_spike`, `db_connection_leak`, `memory_leak`, `api_cascade`. |
+| 🛠️ | **Runbook builder** | Browse AI-linked runbooks **and create your own**, persisted via `/api/runbooks`. |
+| 🔔 | **Slack alerts w/ deep links** | Block Kit cards whose buttons open the exact incident & the matching runbook. |
+| 🎙️ | **Multilingual voice assistant** | ElevenLabs TTS + Groq Whisper; replies in your language — English default, plus Hindi, Marathi, Tamil, Telugu, Bengali, Gujarati, Punjabi, Kannada, Malayalam. |
+| 🕒 | **IST clocks** | All timestamps render in India Standard Time (Asia/Kolkata). |
+
+---
+
+## 🏗️ Architecture
+
+One Cloud Run container hosts both the **FastAPI** backend and the **static dashboard** — the UI is served from `/`, all `/api/*` and WebSocket routes take precedence.
+
+```
+                         ┌───────────────────────────── Google Cloud Run ─────────────────────────────┐
+                         │                                                                             │
+  Browser ──HTTPS──▶     │   FastAPI (main.py)                                                          │
+  (dashboard, Data Room) │   ├── /                       → static UI (index + screens/ + components/)  │
+        ▲                │   ├── /api/health             → provider health                            │
+        │  WebSocket     │   ├── /api/chaos              → generate scenario + run pipeline            │
+        └────────────────┤   ├── /api/analyze            → 3-stage pipeline on logs                    │
+   /ws/live (incidents)  │   ├── /api/incidents[/{id}]   → store + single incident                     │
+   /api/voice/listen     │   ├── /api/metrics            → live service health                         │
+                         │   ├── /api/runbooks (GET/POST)→ runbook store                               │
+                         │   ├── /api/chat               → multilingual SRE assistant                  │
+                         │   ├── /api/slack              → deep-linking Block Kit alert                 │
+                         │   ├── /api/integrations/seed  → push demo telemetry INTO providers          │
+                         │   └── /api/integrations/sync  → pull real logs FROM providers               │
+                         │                                                                             │
+                         │   services/  groq · gemini · openai · elevenlabs · slack ·                  │
+                         │              datadog · grafana · newrelic · monitoring_agent · chaos        │
+                         └─────────────────────────────────────────────────────────────────────────────┘
+                                 │              │               │
+                                 ▼              ▼               ▼
+                             Datadog        Grafana Loki     New Relic        ◀── live, bidirectional
+```
+
+### Repository layout
+
+```
+incidentiq/
+├── Dockerfile              # Single image: FastAPI API + bundled UI
+├── index.html              # Landing page (live topology + ingest bar + seed button)
+├── screens/
+│   ├── dashboard.html      # Command Center — live feed, topology, incident detail, voice orb
+│   ├── incidents.html      # Incident history table (live + deep-linkable)
+│   ├── metrics.html        # Live per-service telemetry
+│   ├── alerts.html         # Alert rules + notification channels (Join-Slack link)
+│   ├── runbooks.html       # Runbook library + "New Runbook" builder
+│   └── integrations.html   # 🟣 Data Room — live ingest proof
+├── components/             # React components (charts, topology, incident cards, voice orb)
+└── backend/
+    ├── main.py             # FastAPI app — all routes + WebSockets
+    ├── models.py           # Pydantic request models
+    ├── store.py            # In-memory incident store, runbook store, WS manager
+    └── services/
+        ├── groq_service.py        # Stage 1 — triage + Whisper transcription
+        ├── gemini_service.py      # Stage 2 — event correlation
+        ├── openai_service.py      # Stage 3 — root cause + real confidence + multilingual chat
+        ├── elevenlabs_service.py  # Multilingual text-to-speech
+        ├── slack_service.py       # Deep-linking Block Kit alerts
+        ├── datadog_service.py     # Datadog logs/monitors/events + push
+        ├── grafana_service.py     # Grafana alerts + Loki query/push
+        ├── newrelic_service.py    # New Relic NerdGraph + Log API push
+        ├── monitoring_agent.py    # Autonomous polling agent
+        └── chaos_service.py       # 5 failure-scenario generators
+```
 
 ---
 
@@ -151,13 +211,7 @@ pip install -r requirements.txt
 python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Open `index.html` in a browser, or hit the API:
-
-```bash
-curl http://127.0.0.1:8000/api/health
-curl http://127.0.0.1:8000/api/integrations/status
-curl -X POST http://127.0.0.1:8000/api/chaos -H "Content-Type: application/json" -d '{"scenario":"api_cascade"}'
-```
+Open `index.html` in a browser, or hit the API directly (see Quick demo above).
 
 ---
 
@@ -185,16 +239,17 @@ gcloud run deploy incidentiq \
 |---|---|---|
 | `GET`  | `/api/health` | AI provider health (Groq, Gemini, OpenAI, ElevenLabs) |
 | `GET`  | `/api/integrations/status` | Monitoring connector health (Datadog, Grafana, New Relic) |
-| `POST` | `/api/integrations/sync` | Pull live logs from providers; optionally auto-analyze |
+| `POST` | `/api/integrations/seed` | Push demo telemetry **into** Datadog/Grafana/New Relic |
+| `POST` | `/api/integrations/sync` | Pull real logs **from** providers; returns records (+ optional auto-analyze) |
 | `POST` | `/api/ingest` | Ingest logs (raw, GCP, Datadog, or Grafana webhook formats) |
 | `POST` | `/api/analyze` | Run the full 3-stage pipeline on logs |
-| `GET`  | `/api/incidents` | List analyzed incidents |
-| `GET`  | `/api/metrics` | Live per-service health (degrades with active incidents) |
 | `POST` | `/api/chaos` | Generate a failure scenario and analyze it end-to-end |
-| `GET`  | `/api/runbooks` | List runbooks (defaults + user-created) |
-| `POST` | `/api/runbooks` | Create a new runbook |
+| `GET`  | `/api/incidents` | List analyzed incidents |
+| `GET`  | `/api/incidents/{id}` | Fetch one incident (used by Slack "View Dashboard" deep link) |
+| `GET`  | `/api/metrics` | Live per-service health (degrades with active incidents) |
+| `GET`/`POST` | `/api/runbooks` | List / create runbooks |
 | `POST` | `/api/slack` | Send a deep-linking Slack alert for an incident |
-| `POST` | `/api/chat` | Conversational SRE assistant, grounded in an incident |
+| `POST` | `/api/chat` | Multilingual conversational SRE assistant, grounded in an incident |
 | `POST` | `/api/voice/speak` | Text-to-speech (ElevenLabs) |
 | `WS`   | `/api/voice/listen` | Voice Q&A over an incident |
 | `WS`   | `/ws/live` | Live incident stream |
@@ -210,13 +265,15 @@ All config is via environment variables — see [`backend/.env.example`](backend
 |---|---|
 | `GROQ_API_KEY` | Stage-1 triage + Whisper transcription |
 | `GOOGLE_API_KEY` | Stage-2 Gemini correlation |
-| `OPENAI_API_KEY` | Stage-3 root-cause analysis |
+| `OPENAI_API_KEY` | Stage-3 root-cause + multilingual chat |
 | `ELEVENLABS_API_KEY` | Voice synthesis |
 | `SLACK_WEBHOOK_URL` | Slack incident alerts |
 | `FRONTEND_URL` | Base URL used for Slack deep links |
-| `DATADOG_API_KEY` · `DATADOG_APP_KEY` · `DATADOG_SITE` | Datadog connector |
+| `DATADOG_API_KEY` · `DATADOG_APP_KEY` · `DATADOG_SITE` | Datadog connector (logs intake works with the API key) |
 | `GRAFANA_URL` · `GRAFANA_API_KEY` · `GRAFANA_LOKI_URL` | Grafana + Loki connector |
-| `NEW_RELIC_API_KEY` · `NEW_RELIC_ACCOUNT_ID` · `NEW_RELIC_REGION` | New Relic connector |
+| `GRAFANA_LOKI_USER` · `GRAFANA_LOKI_TOKEN` | Grafana Cloud Loki basic-auth (instance id + `logs:read/write` token) |
+| `NEW_RELIC_API_KEY` · `NEW_RELIC_ACCOUNT_ID` · `NEW_RELIC_REGION` | New Relic NerdGraph (user key) |
+| `NEW_RELIC_LICENSE_KEY` | New Relic Log API ingest (license key) |
 | `AGENT_AUTOSTART` | Auto-start the monitoring agent on boot (`true`/`false`) |
 
 ---
@@ -224,9 +281,9 @@ All config is via environment variables — see [`backend/.env.example`](backend
 ## 🧰 Tech stack
 
 **Backend:** FastAPI · Uvicorn · Pydantic · httpx · WebSockets
-**AI:** Groq · Google Gemini · OpenAI · ElevenLabs · Groq Whisper
+**AI:** Groq (`llama-3.3-70b`) · Google Gemini (`2.0-flash`) · OpenAI (`gpt-4o-mini`) · ElevenLabs (`eleven_turbo_v2_5`) · Groq Whisper
 **Monitoring:** Datadog · Grafana / Loki · New Relic
-**Frontend:** React 18 · Babel standalone · canvas viz · custom CSS
+**Frontend:** React 18 · Babel standalone · canvas visualizations · custom CSS
 **Infra:** Docker · Google Cloud Run · Cloud Build · Artifact Registry
 
 ---
@@ -234,6 +291,7 @@ All config is via environment variables — see [`backend/.env.example`](backend
 <div align="center">
 
 ### ▶ Try it now: **https://incidentiq-1099197368634.us-central1.run.app**
+### 💬 [Join the Slack](https://join.slack.com/t/incidentiq-world/shared_invite/zt-3yu7eu01h-cov54rryirD67XPYz97eOw) to watch live incident alerts land.
 
 **Built to give engineers their incident-response time back.** ⏱️
 
