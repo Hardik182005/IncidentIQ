@@ -38,6 +38,19 @@ See ARIA in action: resolving simulated chaos outages, pulling live logs from Da
 
 ---
 
+## 🕹️ Try it yourself (90 seconds, no install)
+
+1. **Open the live app →** [https://incidentiq-1099197368634.us-central1.run.app](https://incidentiq-1099197368634.us-central1.run.app)
+2. **Join the Slack** (optional but worth it) → [IncidentIQ Slack](https://join.slack.com/t/incidentiq-world/shared_invite/zt-3yu7eu01h-cov54rryirD67XPYz97eOw) — so you can watch the alert land in real time.
+3. **Go to the Command Center** (`Dashboard`) and hit **⚡ Trigger Chaos** — pick a scenario like `database_deadlock`.
+4. **Watch ARIA work** — in ~15s you get the root cause, a real confidence score, blast radius, a causal timeline, and copy-paste fix commands. The service topology degrades live and a Slack alert fires with deep-link buttons.
+5. **Click the voice orb** 🎙️ and ask *"what's the root cause?"* — ARIA briefs you out loud (try it in Hindi, Marathi, Tamil, Gujarati… too).
+6. **Open the Data Room** (`/screens/integrations.html`) → click **Seed providers**, then **Pull live data** to see real records stream back from Datadog, Grafana Loki & New Relic — each tagged by source.
+
+> Prefer the terminal? Skip the UI and hit the live API directly — see **[Judge it in 30 seconds](#️-judge-it-in-30-seconds-no-setup--hits-the-live-deployment)** below.
+
+---
+
 ## 🎯 Problem Statement
 
 <div style="background-color: #1e1e1e; color: white; padding: 20px; border-radius: 8px; margin: 15px 0; border: 1px solid #333;">
