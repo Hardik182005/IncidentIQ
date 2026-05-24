@@ -5,62 +5,62 @@
   <title>IncidentIQ — Metrics</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
-    :root{--bg:#080810;--bg2:#0c0c1a;--bg3:#111128;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#eeeef5;--text2:#9898b0;--muted:#52526a;--blue:#3B82F6;--cyan:#06B6D4;--red:#EF4444;--green:#10B981;--amber:#F59E0B;--purple:#8B5CF6}
+    :root{--bg:#000000;--bg2:#09090b;--bg3:#121215;--border:rgba(255,255,255,0.15);--border2:rgba(255,255,255,0.25);--text:#ffffff;--text2:#f1f5f9;--muted:#cbd5e1;--blue:#ffffff;--cyan:#06B6D4;--red:#EF4444;--green:#10B981;--amber:#F59E0B;--purple:#8B5CF6}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;font-weight:500;}
     a{text-decoration:none;color:inherit}
-    ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.09);border-radius:2px}
+    ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:2px}
     .app{display:flex;height:100vh;overflow:hidden}
     .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-    .sidebar{width:218px;flex-shrink:0;background:rgba(6,6,18,0.95);border-right:1px solid var(--border);display:flex;flex-direction:column}
+    .sidebar{width:218px;flex-shrink:0;background:rgba(6,6,8,0.92);border-right:1px solid var(--border);display:flex;flex-direction:column}
     .sb-top{padding:18px;border-bottom:1px solid var(--border)}
     .sb-logo{display:flex;align-items:center;gap:10px}
-    .sq{width:32px;height:32px;background:linear-gradient(135deg,#3B82F6,#06B6D4);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;letter-spacing:-0.05em;flex-shrink:0}
+    .sq{width:32px;height:32px;background:linear-gradient(135deg,#ffffff,#64748b);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000000;letter-spacing:-0.05em;flex-shrink:0;box-shadow:0 0 22px rgba(255,255,255,0.28)}
     .brand{color:var(--text);font-weight:700;font-size:14px;letter-spacing:-0.02em;line-height:1.1}
-    .brand-s{color:var(--muted);font-size:9px;letter-spacing:0.1em;text-transform:uppercase}
+    .brand-s{color:var(--muted);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;}
     .sb-nav{padding:10px 9px;flex:1}
-    .sb-lnk{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;color:var(--text2);font-size:13px;margin-bottom:2px;transition:all 0.14s;border:1px solid transparent}
+    .sb-lnk{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;color:var(--text2);font-size:13px;margin-bottom:2px;transition:all 0.14s;border:1px solid transparent;font-weight:600;}
     .sb-lnk:hover{background:rgba(255,255,255,0.048);color:var(--text)}
-    .sb-lnk.active{background:rgba(59,130,246,0.11);color:var(--text);border-color:rgba(59,130,246,0.18);font-weight:500}
+    .sb-lnk.active{background:rgba(255,255,255,0.09);color:#ffffff;border-color:rgba(255,255,255,0.22);font-weight:700}
     .sb-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
-    .sb-ai{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.055);border-bottom:1px solid rgba(255,255,255,0.055)}
-    .sb-sec{color:var(--muted);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:9px}
-    .sb-prov{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px;color:var(--text2)}
-    .sb-lat{margin-left:auto;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+    .sb-ai{padding:12px 16px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+    .sb-sec{color:var(--muted);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:9px;font-weight:700;}
+    .sb-prov{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px;color:var(--text2);font-weight:600;}
+    .sb-lat{margin-left:auto;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted);font-weight:600;}
     .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--green)}
-    .sb-ws{padding:12px 16px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+    .sb-ws{padding:12px 16px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-weight:600;}
     .ws-bars{display:flex;gap:2px;align-items:flex-end;margin-left:auto}
     .ws-b{width:3px;border-radius:1px;background:var(--green)}
-    .topbar{padding:9px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:24px;background:rgba(6,6,18,0.5);flex-shrink:0;min-height:52px}
-    .ts .tl{color:var(--muted);font-size:9px;letter-spacing:0.1em;margin-bottom:1px}
+    .topbar{padding:9px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:24px;background:rgba(6,6,8,0.5);flex-shrink:0;min-height:52px}
+    .ts .tl{color:var(--muted);font-size:9px;letter-spacing:0.1em;margin-bottom:1px;font-weight:700;}
     .ts .tv{font-size:15px;font-weight:700;font-family:'JetBrains Mono',monospace}
-    .topbar-time{margin-left:auto;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace}
+    .topbar-time{margin-left:auto;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;}
     .content{flex:1;overflow-y:auto;padding:22px 24px}
     .page-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
     .page-title{font-size:22px;font-weight:700;letter-spacing:-0.03em}
-    .page-sub{font-size:13px;color:var(--text2);margin-top:2px}
+    .page-sub{font-size:13px;color:var(--text2);margin-top:2px;font-weight:600;}
     .time-pills{display:flex;gap:4px}
-    .tpill{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;color:var(--muted);cursor:pointer;transition:all 0.15s;font-family:'JetBrains Mono',monospace}
+    .tpill{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;color:var(--muted);cursor:pointer;transition:all 0.15s;font-family:'JetBrains Mono',monospace;font-weight:600;}
     .tpill:hover{background:var(--bg3);color:var(--text)}
-    .tpill.active{background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.3);color:#60A5FA}
+    .tpill.active{background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.35);color:#ffffff}
     .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
     .chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px}
     .chart-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
-    .chart-title{font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase}
+    .chart-title{font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;font-weight:700;}
     .chart-val{font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace}
-    .chart-sub{font-size:10px;color:var(--muted);margin-top:2px}
+    .chart-sub{font-size:10px;color:var(--muted);margin-top:2px;font-weight:600;}
     canvas.chart{width:100%;height:140px;display:block}
     .svc-table{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
     .svc-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-    .svc-title{font-size:13px;font-weight:600}
+    .svc-title{font-size:13px;font-weight:700}
     table{width:100%;border-collapse:collapse}
     thead th{padding:10px 16px;text-align:left;font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;border-bottom:1px solid var(--border)}
     tbody tr{border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s}
     tbody tr:last-child{border-bottom:none}
     tbody tr:hover{background:rgba(255,255,255,0.025)}
-    td{padding:11px 16px;font-size:13px}
-    .svc-name{font-weight:500;letter-spacing:-0.01em}
-    .td-mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)}
+    td{padding:11px 16px;font-size:13px;font-weight:600;}
+    .svc-name{font-weight:600;letter-spacing:-0.01em}
+    .td-mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);font-weight:600;}
     .health-bar-wrap{width:80px;height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden}
     .health-bar{height:100%;border-radius:2px}
     .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:7px}
@@ -70,7 +70,7 @@
 <body>
 <div class="app">
   <aside class="sidebar">
-    <div class="sb-top"><a href="index.html" class="sb-logo"><div class="sq">IQ</div><div><div class="brand">IncidentIQ</div><div class="brand-s">SRE War Room</div></div></a></div>
+    <div class="sb-top"><a href="../index.html" class="sb-logo"><div class="sq">IQ</div><div><div class="brand">IncidentIQ</div><div class="brand-s">SRE War Room</div></div></a></div>
     <nav class="sb-nav">
       <a href="dashboard.html" class="sb-lnk"><span class="sb-icon">◈</span>War Room</a>
       <a href="incidents.html" class="sb-lnk"><span class="sb-icon">⬡</span>Incidents</a>
@@ -82,7 +82,7 @@
       <div class="sb-sec">AI Providers</div>
       <div class="sb-prov"><span class="dot"></span>Groq<span class="sb-lat">12ms</span></div>
       <div class="sb-prov"><span class="dot"></span>Gemini<span class="sb-lat">34ms</span></div>
-      <div class="sb-prov"><span class="dot"></span>Claude<span class="sb-lat">28ms</span></div>
+      <div class="sb-prov"><span class="dot"></span>OpenAI<span class="sb-lat">28ms</span></div>
     </div>
     <div class="sb-ws"><span class="dot" style="animation:breathe 1.6s infinite"></span>WS Connected<div class="ws-bars"><div class="ws-b" style="height:5px"></div><div class="ws-b" style="height:8px"></div><div class="ws-b" style="height:11px"></div></div></div>
   </aside>
@@ -142,15 +142,7 @@
         <div class="svc-header"><span class="svc-title">Service Health Overview</span><span style="font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace">Updated 2s ago</span></div>
         <table>
           <thead><tr><th>Service</th><th>Status</th><th>Error Rate</th><th>P99 Latency</th><th>Req/s</th><th>Uptime</th><th>Health</th></tr></thead>
-          <tbody>
-            <tr><td class="svc-name">gateway-api</td><td><span class="status-dot" style="background:var(--green)"></span><span style="color:var(--green);font-size:12px">Healthy</span></td><td class="td-mono">0.1%</td><td class="td-mono">42ms</td><td class="td-mono">1,247</td><td class="td-mono">99.98%</td><td><div class="health-bar-wrap"><div class="health-bar" style="width:99%;background:var(--green)"></div></div></td></tr>
-            <tr><td class="svc-name">auth-service</td><td><span class="status-dot" style="background:var(--amber)"></span><span style="color:var(--amber);font-size:12px">Degraded</span></td><td class="td-mono">1.8%</td><td class="td-mono">312ms</td><td class="td-mono">847</td><td class="td-mono">99.71%</td><td><div class="health-bar-wrap"><div class="health-bar" style="width:72%;background:var(--amber)"></div></div></td></tr>
-            <tr><td class="svc-name">payments-api</td><td><span class="status-dot" style="background:var(--red)"></span><span style="color:var(--red);font-size:12px">Critical</span></td><td class="td-mono">8.7%</td><td class="td-mono">1,240ms</td><td class="td-mono">203</td><td class="td-mono">94.2%</td><td><div class="health-bar-wrap"><div class="health-bar" style="width:32%;background:var(--red)"></div></div></td></tr>
-            <tr><td class="svc-name">user-service</td><td><span class="status-dot" style="background:var(--green)"></span><span style="color:var(--green);font-size:12px">Healthy</span></td><td class="td-mono">0.3%</td><td class="td-mono">68ms</td><td class="td-mono">1,102</td><td class="td-mono">99.95%</td><td><div class="health-bar-wrap"><div class="health-bar" style="width:97%;background:var(--green)"></div></div></td></tr>
-            <tr><td class="svc-name">postgres-primary</td><td><span class="status-dot" style="background:var(--red)"></span><span style="color:var(--red);font-size:12px">Critical</span></td><td class="td-mono">12.1%</td><td class="td-mono">4,200ms</td><td class="td-mono">91</td><td class="td-mono">91.3%</td><td><div class="health-bar-wrap"><div class="health-bar" style="width:18%;background:var(--red)"></div></div></td></tr>
-            <tr><td class="svc-name">redis-cache</td><td><span class="status-dot" style="background:var(--green)"></span><span style="color:var(--green);font-size:12px">Healthy</span></td><td class="td-mono">0.0%</td><td class="td-mono">3ms</td><td class="td-mono">4,821</td><td class="td-mono">100%</td><td><div class="health-bar-wrap"><div class="health-bar" style="width:100%;background:var(--green)"></div></div></td></tr>
-            <tr><td class="svc-name">notification-worker</td><td><span class="status-dot" style="background:var(--amber)"></span><span style="color:var(--amber);font-size:12px">Degraded</span></td><td class="td-mono">2.4%</td><td class="td-mono">890ms</td><td class="td-mono">128</td><td class="td-mono">98.2%</td><td><div class="health-bar-wrap"><div class="health-bar" style="width:58%;background:var(--amber)"></div></div></td></tr>
-          </tbody>
+          <tbody id="tbody"></tbody>
         </table>
       </div>
     </div>
@@ -200,18 +192,100 @@ requestAnimationFrame(()=>{
   drawChart('c-apx','#10B981',apxD,'',45);
 });
 
-let t=0;
-setInterval(()=>{
-  t++;
-  ['er','lat','vol','apx'].forEach(k=>{
-    const configs={er:{base:2.3,v:0.8,suf:'%',id:'er-val',big:'er-big'},lat:{base:284,v:40,suf:'ms',id:'lat-val',big:'lat-big'},vol:{base:1247,v:150,suf:'/s',id:'thr-val',big:'vol-big'},apx:{base:0.94,v:0.03,suf:'',id:null,big:'apx-big'}};
-    const c=configs[k];
-    const v=c.base+(Math.random()-0.5)*c.v;
-    const s=k==='apx'?v.toFixed(2):k==='er'?v.toFixed(1)+c.suf:Math.round(v).toLocaleString()+c.suf;
-    if(c.id)document.getElementById(c.id).textContent=s;
-    document.getElementById(c.big).textContent=s;
-  });
-},2000);
+const API_BASE = (typeof location !== 'undefined' && location.protocol.startsWith('http') && location.port !== '8080')
+  ? '' : 'http://127.0.0.1:8000';
+
+async function updateLiveMetrics() {
+  try {
+    const res = await fetch(`${API_BASE}/api/metrics`);
+    const data = await res.json();
+    if (res.ok && data && data.success) {
+      const metrics = data.data;
+      renderMetricsTable(metrics);
+      updateTopBar(metrics);
+    }
+  } catch (e) {
+    console.error("Failed to fetch live metrics", e);
+  }
+}
+
+function renderMetricsTable(metrics) {
+  const tbody = document.getElementById('tbody');
+  if (!tbody) return;
+
+  const services = [
+    { key: 'gateway-api', name: 'gateway-api' },
+    { key: 'auth-service', name: 'auth-service' },
+    { key: 'payments-api', name: 'payments-api' },
+    { key: 'user-service', name: 'user-service' },
+    { key: 'postgres-primary', name: 'postgres-primary' },
+    { key: 'redis-cache', name: 'redis-cache' },
+    { key: 'notification-worker', name: 'notification-worker' }
+  ];
+
+  const colMap = {
+    Healthy:  { class: 'green', val: 97 },
+    Degraded: { class: 'amber', val: 58 },
+    Critical: { class: 'red', val: 18 },
+  };
+
+  tbody.innerHTML = services.map(s => {
+    const m = metrics[s.key] || { status: 'Healthy', error_rate: '0.0%', latency: '2ms', throughput: '1,000/s', uptime: '100.0%' };
+    const st = m.status;
+    const c = colMap[st] || colMap.Healthy;
+    const uptimeVal = parseFloat(m.uptime.replace('%', '')) || 99.9;
+    
+    return `
+      <tr>
+        <td class="svc-name">${s.name}</td>
+        <td><span class="status-dot" style="background:var(--${c.class})"></span><span style="color:var(--${c.class});font-size:12px">${st}</span></td>
+        <td class="td-mono">${m.error_rate}</td>
+        <td class="td-mono">${m.latency}</td>
+        <td class="td-mono">${m.throughput}</td>
+        <td class="td-mono">${m.uptime}</td>
+        <td><div class="health-bar-wrap"><div class="health-bar" style="width:${uptimeVal}%;background:var(--${c.class})"></div></div></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function updateTopBar(metrics) {
+  let totalErrors = 0;
+  let totalLatency = 0;
+  let totalThroughput = 0;
+  let servicesUp = 0;
+  let count = 0;
+
+  for (const key in metrics) {
+    const raw = metrics[key].raw || {};
+    totalErrors += raw.error_rate || 0;
+    totalLatency += raw.latency || 0;
+    totalThroughput += raw.throughput || 0;
+    if (raw.status !== 'CRITICAL') {
+      servicesUp++;
+    }
+    count++;
+  }
+
+  const avgError = totalErrors / (count || 1);
+  const avgLatency = totalLatency / (count || 1);
+
+  document.getElementById('er-val').textContent = avgError.toFixed(1) + '%';
+  document.getElementById('er-big').textContent = avgError.toFixed(1) + '%';
+
+  document.getElementById('lat-val').textContent = Math.round(avgLatency) + 'ms';
+  document.getElementById('lat-big').textContent = Math.round(avgLatency) + 'ms';
+
+  document.getElementById('thr-val').textContent = Math.round(totalThroughput).toLocaleString() + '/s';
+  document.getElementById('vol-big').textContent = Math.round(totalThroughput).toLocaleString() + '/s';
+
+  const apdex = 1.0 - (avgError / 100);
+  document.getElementById('apx-big').textContent = apdex.toFixed(2);
+}
+
+// Initial pull and periodic loop
+updateLiveMetrics();
+setInterval(updateLiveMetrics, 2000);
 
 setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false})+' UTC',1000);
 </script>

@@ -15,7 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ /app/
 
 # Static frontend bundled into /app/frontend (served by FastAPI at "/")
-COPY index.html dashboard.html incidents.html metrics.html alerts.html runbooks.html /app/frontend/
+COPY index.html /app/frontend/
+COPY screens/ /app/frontend/screens/
 COPY components/ /app/frontend/components/
 
 RUN mkdir -p /tmp/incidentiq_logs

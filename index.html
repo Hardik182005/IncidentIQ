@@ -164,7 +164,7 @@
     <a href="#process">How it works</a>
     <a href="#demo">Demo</a>
   </div>
-  <a href="dashboard.html" class="nav-cta">Open War Room →</a>
+  <a href="screens/dashboard.html" class="nav-cta">Open War Room →</a>
 </nav>
 
 <!-- HERO -->
@@ -178,7 +178,7 @@
     </h1>
     <p class="hero-sub">Multi-model AI that detects, diagnoses, and fixes production incidents in real-time — before your users notice.</p>
     <div class="hero-actions">
-      <a href="dashboard.html" class="btn-p">Open War Room →</a>
+      <a href="screens/dashboard.html" class="btn-p">Open War Room →</a>
       <a href="#demo" class="btn-s">See AI in action</a>
     </div>
   </div>
@@ -225,8 +225,8 @@
     <div class="feat reveal">
       <div class="feat-num">01</div>
       <div class="feat-h">Multi-Model AI Analysis</div>
-      <div class="feat-p">Three specialized models analyze your incident simultaneously — Groq for speed, Gemini for pattern matching, Claude for root cause synthesis.</div>
-      <div class="ai-chain"><span class="aip g">Groq</span><span class="aip-a">→</span><span class="aip b">Gemini</span><span class="aip-a">→</span><span class="aip p">Claude</span></div>
+      <div class="feat-p">Three specialized models analyze your incident simultaneously — Groq for speed, Gemini for pattern matching, OpenAI for root cause synthesis.</div>
+      <div class="ai-chain"><span class="aip g">Groq</span><span class="aip-a">→</span><span class="aip b">Gemini</span><span class="aip-a">→</span><span class="aip p">OpenAI</span></div>
     </div>
     <div class="feat reveal reveal-d1">
       <div class="feat-num">02</div>
@@ -237,7 +237,7 @@
     <div class="feat reveal reveal-d2">
       <div class="feat-num">03</div>
       <div class="feat-h">Voice Interface</div>
-      <div class="feat-p">Ask ARIA questions in natural language. Get spoken diagnoses, step-by-step runbooks, and immediate fix commands without leaving the war room.</div>
+      <div class="feat-p">Ask IQ-Sentry questions in natural language. Get spoken diagnoses, step-by-step runbooks, and immediate fix commands without leaving the war room.</div>
       <div class="feat-tags"><span class="ftag">Natural language</span><span class="ftag">Voice response</span><span class="ftag">Audio visualization</span></div>
     </div>
     <div class="feat reveal">
@@ -275,7 +275,7 @@
     <div class="proc-step reveal reveal-d1">
       <div class="proc-n">02 — DIAGNOSE</div>
       <div class="proc-h">Root cause in 5.1 seconds</div>
-      <div class="proc-p">Three AI models run in parallel over your logs, metrics, and dependency graph. Groq identifies the anomaly type, Gemini correlates with recent deploys, Claude synthesizes a confidence-scored root cause.</div>
+      <div class="proc-p">Three AI models run in parallel over your logs, metrics, and dependency graph. Groq identifies the anomaly type, Gemini correlates with recent deploys, OpenAI synthesizes a confidence-scored root cause.</div>
     </div>
     <div class="proc-step reveal reveal-d2">
       <div class="proc-n">03 — RESOLVE</div>
@@ -307,7 +307,7 @@
 <section class="cta-section reveal">
   <h2 class="cta-h">Ready to resolve incidents<br>10x faster?</h2>
   <p class="cta-p">Enter the war room and see every feature working live.</p>
-  <a href="dashboard.html" class="btn-p" style="font-size:15px;padding:13px 32px">Open War Room →</a>
+  <a href="screens/dashboard.html" class="btn-p" style="font-size:15px;padding:13px 32px">Open War Room →</a>
 </section>
 
 <footer class="footer">
@@ -317,7 +317,7 @@
     <span style="font-size:12px;color:var(--muted);margin-left:12px">© 2026 · Built for SRE teams</span>
   </div>
   <div class="footer-links">
-    <a href="dashboard.html">War Room</a>
+    <a href="screens/dashboard.html">War Room</a>
     <a href="#features">Features</a>
     <a href="#process">How it works</a>
     <a href="#demo">Demo</a>
@@ -526,7 +526,7 @@
 
         ctx.font="10px 'JetBrains Mono',monospace"; ctx.textAlign='left';
         ctx.fillStyle='rgba(255,255,255,0.5)';
-        ctx.fillText('Groq → Gemini → Claude', cx+44, cy+63);
+        ctx.fillText('Groq → Gemini → OpenAI', cx+44, cy+63);
         ctx.fillStyle='rgba(255,255,255,0.25)';
         ctx.fillText('Analyzing 1,247 log lines…', cx+44, cy+80);
 
@@ -607,10 +607,10 @@
     {delay:3900, cls:'tc-blue',  text:'[Gemini] Matched: deploy v2.14.1 (+idle_timeout 300s)'},
     {delay:4400, cls:'tc-blue',  text:'[Gemini] Processing time: 2.1s'},
     {delay:4700, cls:'tc-muted', text:''},
-    {delay:4800, cls:'tc-purple',text:'[Claude] Synthesizing root cause...'},
-    {delay:5800, cls:'tc-purple',text:'[Claude] Root cause: idle_timeout misconfiguration'},
-    {delay:6300, cls:'tc-purple',text:'[Claude] 847 idle connections occupying all pool slots'},
-    {delay:6700, cls:'tc-purple',text:'[Claude] Processing time: 1.8s'},
+    {delay:4800, cls:'tc-purple',text:'[OpenAI] Synthesizing root cause...'},
+    {delay:5800, cls:'tc-purple',text:'[OpenAI] Root cause: idle_timeout misconfiguration'},
+    {delay:6300, cls:'tc-purple',text:'[OpenAI] 847 idle connections occupying all pool slots'},
+    {delay:6700, cls:'tc-purple',text:'[OpenAI] Processing time: 1.8s'},
     {delay:7000, cls:'tc-muted', text:''},
     {delay:7100, cls:'tc-white', text:'────────────────────────────────────────'},
     {delay:7200, cls:'tc-green', text:'✓ ROOT CAUSE IDENTIFIED  (confidence: 94%)'},

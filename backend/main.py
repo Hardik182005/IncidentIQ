@@ -375,6 +375,128 @@ async def list_incidents():
     return _ok(incident_store.get_all_incidents())
 
 
+@app.get("/api/incidents/{incident_id}/logs")
+async def get_incident_logs(incident_id: str):
+    return _ok(incident_store.get_logs(incident_id))
+
+
+@app.get("/api/metrics")
+async def get_live_metrics():
+    # Baseline healthy stats
+    metrics = {
+        "gateway-api": {"status": "Healthy", "error_rate": 0.1, "latency": 42, "throughput": 1247, "uptime": 99.98},
+        "auth-service": {"status": "Healthy", "error_rate": 0.2, "latency": 58, "throughput": 847, "uptime": 99.95},
+        "payments-api": {"status": "Healthy", "error_rate": 0.3, "latency": 75, "throughput": 1102, "uptime": 99.92},
+        "user-service": {"status": "Healthy", "error_rate": 0.15, "latency": 45, "throughput": 1150, "uptime": 99.97},
+        "postgres-primary": {"status": "Healthy", "error_rate": 0.05, "latency": 8, "throughput": 2341, "uptime": 99.99},
+        "redis-cache": {"status": "Healthy", "error_rate": 0.0, "latency": 2, "throughput": 4821, "uptime": 100.0},
+        "notification-worker": {"status": "Healthy", "error_rate": 0.4, "latency": 110, "throughput": 128, "uptime": 99.85},
+    }
+
+    # Inspect active incidents
+    active_incidents = [inc for inc in incident_store.get_all_incidents() if inc.get("status", "").lower() == "active"]
+    
+    for inc in active_incidents:
+        affected = inc.get("affected_services", []) or []
+        severity = str(inc.get("severity", "CRITICAL")).upper()
+        scenario = inc.get("scenario", "")
+        
+        # If it's a database deadlock or connection leak, postgres and payments are affected
+        if "postgres" in affected or "db" in scenario or "postgres" in str(inc.get("root_cause_summary", "")).lower():
+            metrics["postgres-primary"] = {
+                "status": severity,
+                "error_rate": 12.1 if severity == "CRITICAL" else 4.2,
+                "latency": 4200 if severity == "CRITICAL" else 850,
+                "throughput": 91,
+                "uptime": 91.3,
+            }
+            metrics["payments-api"] = {
+                "status": severity,
+                "error_rate": 8.7 if severity == "CRITICAL" else 3.2,
+                "latency": 1240 if severity == "CRITICAL" else 450,
+                "throughput": 203,
+                "uptime": 94.2,
+            }
+        
+        # If it's network latency or API cascade, gateway, payments, and auth are degraded
+        elif "gateway" in affected or "cascade" in scenario or "latency" in scenario:
+            metrics["gateway-api"] = {
+                "status": severity,
+                "error_rate": 5.4 if severity == "CRITICAL" else 1.8,
+                "latency": 8500 if severity == "CRITICAL" else 620,
+                "throughput": 1045,
+                "uptime": 98.42,
+            }
+            metrics["payments-api"] = {
+                "status": severity,
+                "error_rate": 6.8 if severity == "CRITICAL" else 2.1,
+                "latency": 14200 if severity == "CRITICAL" else 840,
+                "throughput": 150,
+                "uptime": 96.1,
+            }
+            metrics["auth-service"] = {
+                "status": "DEGRADED" if severity == "CRITICAL" else "HEALTHY",
+                "error_rate": 2.8,
+                "latency": 450,
+                "throughput": 520,
+                "uptime": 99.15,
+            }
+
+        # If it's a memory leak, user-service and cache might be degraded
+        elif "user" in affected or "memory" in scenario or "oom" in str(inc.get("root_cause_summary", "")).lower():
+            metrics["user-service"] = {
+                "status": severity,
+                "error_rate": 9.4 if severity == "CRITICAL" else 3.2,
+                "latency": 2800 if severity == "CRITICAL" else 490,
+                "throughput": 820,
+                "uptime": 93.4,
+            }
+            metrics["notification-worker"] = {
+                "status": "DEGRADED",
+                "error_rate": 2.4,
+                "latency": 890,
+                "throughput": 128,
+                "uptime": 98.2,
+            }
+
+        # Generic mapping fallback
+        else:
+            for svc in affected:
+                if svc in metrics:
+                    metrics[svc] = {
+                        "status": severity,
+                        "error_rate": 6.5,
+                        "latency": 1250,
+                        "throughput": 500,
+                        "uptime": 96.5,
+                    }
+
+    # Add random micro-variance for live realism to healthy services
+    import random
+    for name, svc in metrics.items():
+        if svc["status"] == "Healthy":
+            # Add tiny variations to error_rate, latency, throughput
+            svc["error_rate"] = max(0.0, round(svc["error_rate"] + random.uniform(-0.05, 0.05), 2))
+            svc["latency"] = max(1, int(svc["latency"] + random.randint(-4, 4)))
+            svc["throughput"] = max(10, int(svc["throughput"] + random.randint(-20, 20)))
+
+    # Format numbers into strings (e.g. latency -> "42ms") as the frontend expects
+    formatted = {}
+    for name, svc in metrics.items():
+        status_label = svc["status"].capitalize() if svc["status"] in ("Healthy", "Degraded", "Critical") else svc["status"]
+        formatted[name] = {
+            "status": status_label,
+            "error_rate": f"{svc['error_rate']:.1f}%" if name != "redis-cache" else "0.0%",
+            "latency": f"{svc['latency']:,}ms",
+            "throughput": f"{svc['throughput']:,}/s" if name != "notification-worker" else f"{svc['throughput']:,}",
+            "uptime": f"{svc['uptime']:.2f}%" if name != "redis-cache" else "100.0%",
+            "raw": svc
+        }
+
+    return _ok(formatted)
+
+
+
 # ── /api/voice/speak ──────────────────────────────────────────────────────────
 
 @app.post("/api/voice/speak")
@@ -519,7 +641,7 @@ async def ws_live(ws: WebSocket):
 
 @app.post("/api/chaos")
 async def chaos(req: ChaosRequest):
-    valid = {"db_connection_leak", "memory_leak", "api_cascade"}
+    valid = {"db_connection_leak", "memory_leak", "api_cascade", "network_latency_spike", "database_deadlock"}
     if req.scenario not in valid:
         _fail(f"Unknown scenario '{req.scenario}'. Valid options: {sorted(valid)}", 400)
 

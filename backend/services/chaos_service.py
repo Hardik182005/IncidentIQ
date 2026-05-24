@@ -12,6 +12,8 @@ def generate_chaos_logs(scenario: str) -> List[Dict[str, Any]]:
         "db_connection_leak": _db_connection_leak,
         "memory_leak": _memory_leak,
         "api_cascade": _api_cascade,
+        "network_latency_spike": _network_latency_spike,
+        "database_deadlock": _database_deadlock,
     }
     return dispatch[scenario]()
 
@@ -104,11 +106,20 @@ def _db_connection_leak() -> List[Dict[str, Any]]:
             ]
             msg = random.choice(stacks)
 
+        source = "datadog"
+        if service == "postgres":
+            source = random.choice(["grafana-loki", "grafana-alert"])
+        elif service == "auth-service":
+            source = random.choice(["newrelic-log", "newrelic-incident"])
+        else:
+            source = random.choice(["datadog", "datadog-monitor", "datadog-event"])
+
         logs.append({
             "timestamp": ts,
             "severity": level,
             "service": service,
             "message": msg,
+            "source": source,
             "meta": {"connection_count": conn},
         })
 
@@ -185,11 +196,20 @@ def _memory_leak() -> List[Dict[str, Any]]:
                 f"OOM score: {random.randint(850, 999)} — pod scheduled for termination",
             ])
 
+        source = "datadog"
+        if "redis" in service:
+            source = random.choice(["grafana-loki", "grafana-alert"])
+        elif "recommendation" in service:
+            source = random.choice(["newrelic-log", "newrelic-incident"])
+        else:
+            source = random.choice(["datadog", "datadog-monitor", "datadog-event"])
+
         logs.append({
             "timestamp": ts,
             "severity": level,
             "service": service,
             "message": msg,
+            "source": source,
             "meta": {"memory_pct": max(mem, 0)},
         })
 
@@ -285,6 +305,164 @@ def _api_cascade() -> List[Dict[str, Any]]:
             ])
             level = "WARN" if t < 300 else "INFO"
 
-        logs.append({"timestamp": ts, "severity": level, "service": service, "message": msg})
+        source = "datadog"
+        if "payment" in service:
+            source = random.choice(["grafana-loki", "grafana-alert"])
+        elif "order" in service:
+            source = random.choice(["newrelic-log", "newrelic-incident"])
+        else:
+            source = random.choice(["datadog", "datadog-monitor", "datadog-event"])
+
+        logs.append({
+            "timestamp": ts,
+            "severity": level,
+            "service": service,
+            "message": msg,
+            "source": source
+        })
+
+    return sorted(logs, key=lambda x: x["timestamp"])
+
+
+def _network_latency_spike() -> List[Dict[str, Any]]:
+    import random
+    import uuid
+    logs: List[Dict[str, Any]] = []
+    base = datetime.now(timezone.utc) - timedelta(minutes=6)
+    total = 2000
+    window = 360.0
+
+    phases = [
+        (0,   45,  120,  "INFO"),
+        (45,  90,  850,  "WARN"),
+        (90,  240, 15000, "ERROR"),
+        (240, 300, 1200, "WARN"),
+        (300, 360, 95,   "INFO"),
+    ]
+
+    services = ["api-gateway", "payments-api", "network-switch", "external-processor"]
+
+    for i in range(total):
+        t = (i / total) * window
+        ts = _ts(base, t)
+        service = random.choice(services)
+
+        lat = 120
+        level = "INFO"
+        for start, end, l_val, lvl in phases:
+            if start <= t < end:
+                lat = l_val + random.randint(-40, 80) if l_val < 15000 else l_val + random.randint(-1500, 2400)
+                level = lvl
+                break
+
+        if level == "INFO":
+            msg = random.choice([
+                f"GET /api/payments/charge 200 {lat}ms",
+                f"POST /api/orders/create 200 {lat}ms",
+                f"Ping gateway-switch: round-trip time {lat}ms",
+                f"Stripe processing callback succeeded in {lat}ms",
+            ])
+            source = "datadog"
+        elif level == "WARN":
+            msg = random.choice([
+                f"WARNING: transit latency spike detected — {lat}ms on {service}",
+                f"Grafana Loki warning: Response time threshold breached on {service} ({lat}ms > 500ms)",
+                f"api-gateway: proxy buffering enabled due to slow downstream response",
+                f"New Relic warning: P99 response time degraded on region us-east-1: {lat}ms",
+                f"Stripe API request taking longer than expected: {lat}ms (retry count=0)",
+            ])
+            source = random.choice(["grafana-loki", "newrelic-log"])
+        else:
+            msg = random.choice([
+                f"GET /api/payments/charge 504 Gateway Timeout after {lat}ms",
+                f"sqlalchemy.exc.TimeoutError: Connection lifetime expired during network delay ({lat}ms)",
+                f"New Relic incident: High response latency alert on payments-api. P99 latency is {lat}ms.",
+                f"Datadog monitor [Alert] API Gateway latency > 10s: average latency is {lat/1000:.1f}s",
+                f"Loki error: upstream connection timeout to stripe-api (IP: 34.22.44.11) after {lat}ms",
+                f"CRITICAL: downstream network timeout cascade — payments-api timed out on {service}",
+                f"net-switch: buffer overrun, dropped {random.randint(100, 500)} ingress frames on interface eth0",
+            ])
+            source = random.choice(["newrelic-incident", "datadog-monitor", "grafana-alert"])
+
+        logs.append({
+            "timestamp": ts,
+            "severity": level,
+            "service": service,
+            "message": msg,
+            "source": source,
+            "meta": {"latency_ms": max(lat, 0)},
+        })
+
+    return sorted(logs, key=lambda x: x["timestamp"])
+
+
+def _database_deadlock() -> List[Dict[str, Any]]:
+    import random
+    import uuid
+    logs: List[Dict[str, Any]] = []
+    base = datetime.now(timezone.utc) - timedelta(minutes=5)
+    total = 1500
+    window = 300.0
+
+    phases = [
+        (0,   30,  0,  "INFO"),
+        (30,  90,  1,  "WARN"),
+        (90,  210, 2,  "ERROR"),
+        (210, 270, 1,  "WARN"),
+        (270, 300, 0,  "INFO"),
+    ]
+
+    services = ["postgres", "payments-api", "order-service"]
+
+    for i in range(total):
+        t = (i / total) * window
+        ts = _ts(base, t)
+        service = random.choice(services)
+
+        phase_type = 0
+        level = "INFO"
+        for start, end, pt, lvl in phases:
+            if start <= t < end:
+                phase_type = pt
+                level = lvl
+                break
+
+        if phase_type == 0:
+            msg = random.choice([
+                f"INSERT INTO transactions (id, amount, status) VALUES ('{uuid.uuid4().hex[:8]}', {random.randint(10, 500)}, 'success')",
+                f"SELECT * FROM orders WHERE user_id = {random.randint(1000, 9999)}",
+                f"UPDATE accounts SET balance = balance - 50.0 WHERE id = {random.randint(100, 999)}",
+                f"Postgres execution plan caching completed in {random.randint(1, 8)}ms",
+            ])
+            source = "datadog"
+        elif phase_type == 1:
+            msg = random.choice([
+                f"WARNING: Lock acquisition time exceeding threshold on table 'orders'",
+                f"pg_stat_activity: transaction {random.randint(10000, 99999)} waiting for AccessExclusiveLock",
+                f"New Relic warning: High percentage of queries in LOCK_WAIT state on postgres-primary",
+                f"Loki warning: Connection pool queue growing due to concurrent transaction lock congestion",
+                f"order-service: database transaction took {random.randint(800, 2500)}ms — lock contention suspected",
+            ])
+            source = random.choice(["grafana-loki", "newrelic-log"])
+        else:
+            msg = random.choice([
+                "ERROR: deadlock detected - Detail: Process 1482 waits for ShareLock on transaction 8472; Process 8472 waits for ExclusiveLock on relation 16423 of database 16384",
+                "sqlalchemy.exc.OperationalError: (psycopg2.errors.DeadlockDetected) deadlock detected",
+                "Datadog event: PostgreSQL deadlock: 42 transactions aborted due to lock dependency cycle",
+                "New Relic incident: High transaction failure rate on postgres-primary. 100% of rollback queries failing.",
+                "FATAL: transaction aborted due to concurrent update conflicts on orders table",
+                f"postgres: transaction rollback triggered — processes involved: {random.randint(1000, 9999)} and {random.randint(1000, 9999)}",
+                "payments-api: Database update failed — rolling back transaction #TX-deadlock",
+            ])
+            source = random.choice(["newrelic-incident", "datadog-monitor", "grafana-alert"])
+
+        logs.append({
+            "timestamp": ts,
+            "severity": level,
+            "service": service,
+            "message": msg,
+            "source": source,
+            "meta": {"deadlock_events": 1 if phase_type == 2 else 0},
+        })
 
     return sorted(logs, key=lambda x: x["timestamp"])

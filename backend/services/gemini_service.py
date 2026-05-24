@@ -63,6 +63,7 @@ async def correlate_logs(
         config=types.GenerateContentConfig(
             temperature=0.1,
             max_output_tokens=2048,
+            response_mime_type="application/json",
             thinking_config=types.ThinkingConfig(thinking_budget=0),
         ),
     )

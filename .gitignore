@@ -5,6 +5,8 @@ backend/.env
 !.env.example
 !backend/.env.example
 .deploy-env.yaml
+.nr-ingest-key.txt
+*-ingest-key.txt
 
 # ── Python ─────────────────────────────────────────────────────────────
 __pycache__/

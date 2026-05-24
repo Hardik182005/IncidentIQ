@@ -13,6 +13,7 @@ class WebSocketManager:
         self._active: List[WebSocket] = []
 
     async def connect(self, ws: WebSocket) -> None:
+        await ws.accept()
         self._active.append(ws)
         logger.info(f"WS client connected. Total: {len(self._active)}")
 

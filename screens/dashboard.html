@@ -8,21 +8,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg:#080810; --bg2:#0d0d1e; --card:rgba(255,255,255,0.038);
-      --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.14);
-      --text:#eeeef5; --text2:#9898b0; --muted:#52526a;
-      --blue:#3B82F6; --cyan:#06B6D4; --red:#EF4444;
+      --bg:#000000; --bg2:#09090b; --card:rgba(255,255,255,0.038);
+      --border:rgba(255,255,255,0.15); --border2:rgba(255,255,255,0.25);
+      --text:#ffffff; --text2:#f1f5f9; --muted:#cbd5e1;
+      --blue:#ffffff; --cyan:#06B6D4; --red:#EF4444;
       --green:#10B981; --amber:#F59E0B; --purple:#8B5CF6;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+    html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased;font-weight:500;}
     #root{width:100%;height:100%;position:relative;z-index:10}
     #particle-canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
-    #scanline{position:fixed;top:0;left:0;width:100%;height:140px;background:linear-gradient(to bottom,transparent,rgba(59,130,246,0.025),transparent);animation:scan 12s linear infinite;pointer-events:none;z-index:2}
+    #scanline{position:fixed;top:0;left:0;width:100%;height:140px;background:linear-gradient(to bottom,transparent,rgba(255,255,255,0.015),transparent);animation:scan 12s linear infinite;pointer-events:none;z-index:2}
     #vignette{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(0,0,0,0.55) 100%);pointer-events:none;z-index:1}
     ::-webkit-scrollbar{width:3px;height:3px}
     ::-webkit-scrollbar-track{background:transparent}
-    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.09);border-radius:2px}
+    ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:2px}
     @keyframes scan{from{transform:translateY(-100%)}to{transform:translateY(100vh)}}
     @keyframes breathe{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.06);opacity:1}}
     @keyframes breathe-fast{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
@@ -53,29 +53,38 @@
       const N=70,D=128,pts=Array.from({length:N},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,r:Math.random()*1.2+.3,a:Math.random()*.32+.07}));
       (function loop(){
         ctx.clearRect(0,0,W,H);
-        for(const p of pts){p.x=(p.x+p.vx+W)%W;p.y=(p.y+p.vy+H)%H;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.28);ctx.fillStyle=`rgba(59,130,246,${p.a})`;ctx.fill()}
-        for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<D){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(59,130,246,${(1-d/D)*.09})`;ctx.lineWidth=.5;ctx.stroke()}}
+        for(const p of pts){p.x=(p.x+p.vx+W)%W;p.y=(p.y+p.vy+H)%H;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.28);ctx.fillStyle=`rgba(255,255,255,${p.a})`;ctx.fill()}
+        for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<D){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(255,255,255,${(1-d/D)*.09})`;ctx.lineWidth=.5;ctx.stroke()}}
         requestAnimationFrame(loop);
       })();
     })();
   </script>
 
   <!-- External components (fetched successfully) -->
-  <script type="text/babel" src="components/data.jsx"></script>
-  <script type="text/babel" src="components/incident-card.jsx"></script>
-  <script type="text/babel" src="components/charts.jsx"></script>
-  <script type="text/babel" src="components/voice-orb.jsx"></script>
+  <script type="text/babel" src="../components/data.jsx"></script>
+  <script type="text/babel" src="../components/incident-card.jsx"></script>
+  <script type="text/babel" src="../components/charts.jsx"></script>
+  <script type="text/babel" src="../components/voice-orb.jsx"></script>
 
   <!-- All remaining components inlined to avoid fetch failures -->
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
+    const API_BASE = (typeof location !== 'undefined' && location.protocol.startsWith('http') && location.port !== '8080')
+      ? '' : 'http://127.0.0.1:8000';
+
     /* ── INCIDENT DETAIL ─────────────────────────────── */
-    function AIAnalysisPanel({ incident }) {
+    function AIAnalysisPanel({ incident, onSpeak }) {
       const [stages, setStages] = useState(AI_STAGES.map(s => ({ ...s, status: 'pending' })));
       const [conclusion, setConclusion] = useState('');
       const [typing, setTyping] = useState(false);
       const timers = useRef([]);
+
+      const handleSpeak = () => {
+        if (conclusion && onSpeak) {
+          onSpeak(conclusion);
+        }
+      };
 
       useEffect(() => {
         timers.current.forEach(clearTimeout); timers.current = [];
@@ -129,7 +138,14 @@
             ))}
           </div>
           <div style={{flex:1,display:'flex',flexDirection:'column'}}>
-            <div style={{color:'#52526a',fontSize:'10px',letterSpacing:'0.1em',marginBottom:'8px',textTransform:'uppercase'}}>Root Cause</div>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'8px'}}>
+              <span style={{color:'#52526a',fontSize:'10px',letterSpacing:'0.1em',textTransform:'uppercase'}}>Root Cause</span>
+              {conclusion && !typing && (
+                <button onClick={handleSpeak} style={{background:'rgba(139,92,246,0.1)',border:'1px solid rgba(139,92,246,0.22)',color:'#A78BFA',borderRadius:'4px',padding:'1px 6px',fontSize:'9px',cursor:'pointer',fontFamily:"'Space Grotesk',sans-serif",display:'flex',alignItems:'center',gap:'4px',transition:'all 0.15s'}} onMouseEnter={e=>{e.target.style.background='rgba(139,92,246,0.2)'}} onMouseLeave={e=>{e.target.style.background='rgba(139,92,246,0.1)'}}>
+                  <span>🔊</span> Speak
+                </button>
+              )}
+            </div>
             <div style={{flex:1,background:'rgba(139,92,246,0.06)',border:'1px solid rgba(139,92,246,0.14)',borderRadius:'8px',padding:'12px',color:'#eeeef5',fontSize:'12px',lineHeight:'1.7',fontFamily:"'Space Grotesk',sans-serif",minHeight:'80px'}}>
               {conclusion || <span style={{color:'#52526a'}}>Awaiting analysis...</span>}
               {typing && <span style={{display:'inline-block',width:'7px',height:'14px',background:'#8B5CF6',marginLeft:'2px',verticalAlign:'text-bottom',animation:'flicker 0.7s infinite'}} />}
@@ -147,10 +163,17 @@
       );
     }
 
-    function EvidencePanel() {
+    function EvidencePanel({ logs }) {
       const [search, setSearch] = useState('');
       const [filter, setFilter] = useState('ALL');
-      const visible = FAKE_LOGS.filter(l => (filter==='ALL'||l.level===filter) && (!search||l.msg.toLowerCase().includes(search.toLowerCase())));
+      const sourceLogs = logs && logs.length > 0 ? logs : FAKE_LOGS;
+      const visible = sourceLogs.filter(l => {
+        const level = (l.severity || l.level || 'INFO').toUpperCase();
+        const msg = (l.message || l.msg || '').toLowerCase();
+        const matchesFilter = filter === 'ALL' || level === filter;
+        const matchesSearch = !search || msg.includes(search.toLowerCase());
+        return matchesFilter && matchesSearch;
+      });
       const lStyle = { ERROR:{bg:'rgba(239,68,68,0.09)',col:'#EF4444'}, WARN:{bg:'rgba(245,158,11,0.07)',col:'#F59E0B'}, INFO:{bg:'rgba(255,255,255,0.025)',col:'#52526a'} };
       return (
         <div style={{background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:'12px',padding:'18px',height:'100%',display:'flex',flexDirection:'column'}}>
@@ -165,13 +188,17 @@
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search logs…" style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:'6px',padding:'7px 12px',color:'#eeeef5',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace",marginBottom:'10px',outline:'none',width:'100%'}} onFocus={e=>e.target.style.borderColor='rgba(59,130,246,0.4)'} onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.07)'} />
           <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:'3px'}}>
             {visible.map((log,i) => {
-              const s=lStyle[log.level]||lStyle.INFO;
+              const level = (log.severity || log.level || 'INFO').toUpperCase();
+              const s=lStyle[level]||lStyle.INFO;
+              const msg = log.message || log.msg || '';
+              const ts = (log.timestamp || log.ts || '').split('T').pop() || '';
+              const isKey = log.key || level === 'ERROR';
               return (
-                <div key={i} style={{background:log.key?'rgba(59,130,246,0.065)':s.bg,borderLeft:`2px solid ${log.key?'#3B82F6':s.col}40`,borderRadius:'4px',padding:'5px 9px',fontFamily:"'JetBrains Mono',monospace",fontSize:'11px',display:'flex',alignItems:'flex-start',gap:'8px'}}>
-                  <span style={{color:'#52526a',flexShrink:0,fontSize:'10px'}}>{log.ts}</span>
-                  <span style={{color:s.col,flexShrink:0,fontWeight:'600',fontSize:'10px',letterSpacing:'0.04em'}}>{log.level}</span>
-                  <span style={{color:'#9898b0',lineHeight:'1.45',flex:1}}>{log.msg}</span>
-                  {log.key && <span style={{flexShrink:0,fontSize:'9px',color:'#3B82F6',background:'rgba(59,130,246,0.12)',border:'1px solid rgba(59,130,246,0.22)',borderRadius:'3px',padding:'1px 5px'}}>KEY</span>}
+                <div key={i} style={{background:isKey?'rgba(59,130,246,0.065)':s.bg,borderLeft:`2px solid ${isKey?'#3B82F6':s.col}40`,borderRadius:'4px',padding:'5px 9px',fontFamily:"'JetBrains Mono',monospace",fontSize:'11px',display:'flex',alignItems:'flex-start',gap:'8px'}}>
+                  <span style={{color:'#52526a',flexShrink:0,fontSize:'10px'}}>{ts.slice(0, 12)}</span>
+                  <span style={{color:s.col,flexShrink:0,fontWeight:'600',fontSize:'10px',letterSpacing:'0.04em'}}>{level}</span>
+                  <span style={{color:'#9898b0',lineHeight:'1.45',flex:1}}>{msg}</span>
+                  {isKey && <span style={{flexShrink:0,fontSize:'9px',color:'#3B82F6',background:'rgba(59,130,246,0.12)',border:'1px solid rgba(59,130,246,0.22)',borderRadius:'3px',padding:'1px 5px'}}>KEY</span>}
                 </div>
               );
             })}
@@ -179,6 +206,7 @@
         </div>
       );
     }
+
 
     function FixCommandsPanel() {
       const [copied, setCopied] = useState(null);
@@ -210,9 +238,33 @@
       );
     }
 
-    function IncidentDetail({ incident, onBack }) {
+    function IncidentDetail({ incident, onBack, onSpeak }) {
       const [elapsed, setElapsed] = useState(incident?.elapsed||0);
-      useEffect(()=>{setElapsed(incident?.elapsed||0);const t=setInterval(()=>setElapsed(e=>e+1),1000);return()=>clearInterval(t)},[incident?.id]);
+      const [realLogs, setRealLogs] = useState([]);
+
+      useEffect(()=>{
+        setElapsed(incident?.elapsed||0);
+        const t=setInterval(()=>setElapsed(e=>e+1),1000);
+        return()=>clearInterval(t);
+      },[incident?.id]);
+
+      useEffect(() => {
+        async function loadLogs() {
+          try {
+            const res = await fetch(`${API_BASE}/api/incidents/${incident.id}/logs`);
+            const data = await res.json();
+            if (res.ok && data && data.success) {
+              setRealLogs(data.data || []);
+            }
+          } catch (e) {
+            console.error("Failed to load real logs", e);
+          }
+        }
+        if (incident && incident.id) {
+          loadLogs();
+        }
+      }, [incident?.id]);
+
       if(!incident) return null;
       const cfg=SEVERITY_CONFIG[incident.severity], isCrit=incident.severity==='CRITICAL';
       return (
@@ -231,10 +283,11 @@
             </div>
           </div>
           <div style={{flex:1,display:'flex',gap:'12px',minHeight:0}}>
-            <div style={{flex:'0 0 32%',minHeight:0}}><AIAnalysisPanel incident={incident} /></div>
-            <div style={{flex:'0 0 38%',minHeight:0}}><EvidencePanel /></div>
+            <div style={{flex:'0 0 32%',minHeight:0}}><AIAnalysisPanel incident={incident} onSpeak={onSpeak} /></div>
+            <div style={{flex:'0 0 38%',minHeight:0}}><EvidencePanel logs={realLogs} /></div>
             <div style={{flex:'0 0 30%',minHeight:0}}><FixCommandsPanel /></div>
           </div>
+
           <div style={{flexShrink:0}}><HorizontalTimeline /></div>
         </div>
       );
@@ -315,20 +368,20 @@
     function Sidebar({ incidents, view, onNavigate }) {
       const critCount = incidents.filter(i=>i.severity==='CRITICAL'&&i.status!=='RESOLVED').length;
       const nav = [{id:'dashboard',label:'War Room',icon:'◈'},{id:'incidents',label:'Incidents',icon:'⬡',badge:critCount},{id:'metrics',label:'Metrics',icon:'◎'},{id:'alerts',label:'Alerts',icon:'◇'},{id:'runbooks',label:'Runbooks',icon:'▷'}];
-      const providers = [{name:'Groq',lat:'12ms'},{name:'Gemini',lat:'34ms'},{name:'Claude',lat:'28ms'}];
+      const providers = [{name:'Groq',lat:'12ms'},{name:'Gemini',lat:'34ms'},{name:'OpenAI',lat:'28ms'}];
       return (
-        <div style={{width:'218px',flexShrink:0,background:'rgba(6,6,18,0.88)',borderRight:'1px solid rgba(255,255,255,0.065)',display:'flex',flexDirection:'column',backdropFilter:'blur(16px)'}}>
-          <div style={{padding:'18px 18px 16px',borderBottom:'1px solid rgba(255,255,255,0.065)'}}>
+        <div style={{width:'218px',flexShrink:0,background:'rgba(6,6,8,0.92)',borderRight:'1px solid rgba(255,255,255,0.18)',display:'flex',flexDirection:'column',backdropFilter:'blur(16px)'}}>
+          <div style={{padding:'18px 18px 16px',borderBottom:'1px solid rgba(255,255,255,0.18)'}}>
             <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
               <div style={{position:'relative'}}>
-                <div style={{width:'34px',height:'34px',background:'linear-gradient(135deg,#3B82F6,#06B6D4)',borderRadius:'9px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 0 22px rgba(59,130,246,0.38)'}}>
-                  <span style={{color:'white',fontSize:'13px',fontWeight:'800',letterSpacing:'-0.05em'}}>IQ</span>
+                <div style={{width:'34px',height:'34px',background:'linear-gradient(135deg,#ffffff,#64748b)',borderRadius:'9px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 0 22px rgba(255,255,255,0.28)'}}>
+                  <span style={{color:'#000000',fontSize:'13px',fontWeight:'800',letterSpacing:'-0.05em'}}>IQ</span>
                 </div>
-                <div style={{position:'absolute',bottom:'-1px',right:'-1px',width:'9px',height:'9px',borderRadius:'50%',background:'#10B981',border:'2px solid #080810',boxShadow:'0 0 7px rgba(16,185,129,0.8)',animation:'breathe 2s ease-in-out infinite'}} />
+                <div style={{position:'absolute',bottom:'-1px',right:'-1px',width:'9px',height:'9px',borderRadius:'50%',background:'#10B981',border:'2px solid #000000',boxShadow:'0 0 7px rgba(16,185,129,0.8)',animation:'breathe 2s ease-in-out infinite'}} />
               </div>
               <div>
-                <div style={{color:'#eeeef5',fontWeight:'700',fontSize:'15px',letterSpacing:'-0.03em',lineHeight:1.1}}>IncidentIQ</div>
-                <div style={{color:'#52526a',fontSize:'9px',letterSpacing:'0.12em',textTransform:'uppercase'}}>SRE War Room</div>
+                <div style={{color:'#ffffff',fontWeight:'700',fontSize:'15px',letterSpacing:'-0.03em',lineHeight:1.1}}>IncidentIQ</div>
+                <div style={{color:'#cbd5e1',fontSize:'9px',letterSpacing:'0.12em',textTransform:'uppercase',fontWeight:'700'}}>SRE War Room</div>
               </div>
             </div>
           </div>
@@ -336,27 +389,27 @@
             {nav.map(item=>{
               const active=view===item.id||(item.id==='incidents'&&view==='incident')||(item.id==='dashboard'&&view==='dashboard');
               return (
-                <div key={item.id} onClick={()=>{ if(item.id==='dashboard'){onNavigate('dashboard')}else{window.location.href=item.id+'.html'} }} style={{display:'flex',alignItems:'center',gap:'9px',padding:'7px 10px',borderRadius:'7px',cursor:'pointer',marginBottom:'2px',background:active?'rgba(59,130,246,0.11)':'transparent',border:`1px solid ${active?'rgba(59,130,246,0.18)':'transparent'}`,transition:'all 0.14s'}} onMouseEnter={e=>{if(!active)e.currentTarget.style.background='rgba(255,255,255,0.048)'}} onMouseLeave={e=>{if(!active)e.currentTarget.style.background='transparent'}}>
-                  <span style={{color:active?'#60A5FA':'#52526a',fontSize:'13px',width:'16px',textAlign:'center'}}>{item.icon}</span>
-                  <span style={{color:active?'#eeeef5':'#9898b0',fontSize:'13px',fontWeight:active?'500':'400',flex:1}}>{item.label}</span>
-                  {item.badge>0 && <span style={{background:'rgba(239,68,68,0.18)',color:'#EF4444',border:'1px solid rgba(239,68,68,0.28)',borderRadius:'8px',padding:'0 6px',fontSize:'10px',fontFamily:"'JetBrains Mono',monospace"}}>{item.badge}</span>}
+                <div key={item.id} onClick={()=>{ if(item.id==='dashboard'){onNavigate('dashboard')}else{window.location.href=item.id+'.html'} }} style={{display:'flex',alignItems:'center',gap:'9px',padding:'7px 10px',borderRadius:'7px',cursor:'pointer',marginBottom:'2px',background:active?'rgba(255,255,255,0.09)':'transparent',border:`1px solid ${active?'rgba(255,255,255,0.22)':'transparent'}`,transition:'all 0.14s'}} onMouseEnter={e=>{if(!active)e.currentTarget.style.background='rgba(255,255,255,0.048)'}} onMouseLeave={e=>{if(!active)e.currentTarget.style.background='transparent'}}>
+                  <span style={{color:active?'#ffffff':'#cbd5e1',fontSize:'13px',width:'16px',textAlign:'center',fontWeight:'700'}}>{item.icon}</span>
+                  <span style={{color:active?'#ffffff':'#f1f5f9',fontSize:'13px',fontWeight:active?'700':'600',flex:1}}>{item.label}</span>
+                  {item.badge>0 && <span style={{background:'rgba(239,68,68,0.18)',color:'#EF4444',border:'1px solid rgba(239,68,68,0.28)',borderRadius:'8px',padding:'0 6px',fontSize:'10px',fontFamily:"'JetBrains Mono',monospace",fontWeight:'700'}}>{item.badge}</span>}
                 </div>
               );
             })}
           </nav>
-          <div style={{padding:'12px 16px',borderTop:'1px solid rgba(255,255,255,0.055)',borderBottom:'1px solid rgba(255,255,255,0.055)'}}>
-            <div style={{color:'#52526a',fontSize:'9px',letterSpacing:'0.12em',marginBottom:'9px',textTransform:'uppercase'}}>AI Providers</div>
+          <div style={{padding:'12px 16px',borderTop:'1px solid rgba(255,255,255,0.18)',borderBottom:'1px solid rgba(255,255,255,0.18)'}}>
+            <div style={{color:'#cbd5e1',fontSize:'9px',letterSpacing:'0.12em',marginBottom:'9px',textTransform:'uppercase',fontWeight:'700'}}>AI Providers</div>
             {providers.map(p=>(
               <div key={p.name} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'7px'}}>
                 <div style={{width:'6px',height:'6px',borderRadius:'50%',flexShrink:0,background:'#10B981',boxShadow:'0 0 6px rgba(16,185,129,0.65)',animation:'breathe 2.5s ease-in-out infinite'}} />
-                <span style={{color:'#9898b0',fontSize:'12px',flex:1}}>{p.name}</span>
-                <span style={{color:'#52526a',fontSize:'10px',fontFamily:"'JetBrains Mono',monospace"}}>{p.lat}</span>
+                <span style={{color:'#f1f5f9',fontSize:'12px',flex:1,fontWeight:'600'}}>{p.name}</span>
+                <span style={{color:'#cbd5e1',fontSize:'10px',fontFamily:"'JetBrains Mono',monospace",fontWeight:'600'}}>{p.lat}</span>
               </div>
             ))}
           </div>
           <div style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:'8px'}}>
             <div style={{width:'6px',height:'6px',borderRadius:'50%',background:'#10B981',boxShadow:'0 0 6px rgba(16,185,129,0.7)',animation:'breathe 1.6s ease-in-out infinite'}} />
-            <span style={{color:'#52526a',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace"}}>WS Connected</span>
+            <span style={{color:'#cbd5e1',fontSize:'11px',fontFamily:"'JetBrains Mono',monospace",fontWeight:'600'}}>WS Connected</span>
             <div style={{marginLeft:'auto',display:'flex',gap:'3px'}}>
               {[0,1,2].map(i=><div key={i} style={{width:'3px',height:`${6+i*3}px`,background:'#10B981',borderRadius:'1px',opacity:0.6+i*0.15}} />)}
             </div>
@@ -401,13 +454,186 @@
 
       function goIncident(inc){setSelected(inc);setView('incident')}
 
+      // Helper to format timestamps
+      function formatTimeAgo(isoString) {
+        try {
+          const diff = Date.now() - new Date(isoString).getTime();
+          const mins = Math.floor(diff / 60000);
+          if (mins < 1) return 'Just now';
+          if (mins < 60) return `${mins}m ago`;
+          const hrs = Math.floor(mins / 60);
+          if (hrs < 24) return `${hrs}h ago`;
+          return new Date(isoString).toLocaleDateString();
+        } catch (e) {
+          return 'Just now';
+        }
+      }
+
+      // 1. Fetch historical incidents from /api/incidents on mount
+      useEffect(() => {
+        async function fetchIncidents() {
+          try {
+            const res = await fetch(`${API_BASE}/api/incidents`);
+            const data = await res.json();
+            if (res.ok && data && data.success) {
+              const apiIncidents = data.data || [];
+              if (apiIncidents.length > 0) {
+                const mapped = apiIncidents.map(api => ({
+                  id: api.incident_id,
+                  severity: api.severity.toUpperCase(),
+                  service: api.affected_services && api.affected_services.length > 0 ? api.affected_services[0] : 'unknown',
+                  region: api.sources && api.sources.length > 0 ? api.sources[0] : 'us-east-1',
+                  timestamp: formatTimeAgo(api.timestamp),
+                  rootCause: api.root_cause_summary || api.root_cause?.root_cause || 'Analyzing incident...',
+                  confidence: api.confidence ? Math.round(api.confidence * 100) : 94,
+                  status: api.status.toUpperCase(),
+                  elapsed: api.processing_ms ? Math.round(api.processing_ms / 1000) : 120,
+                  tags: api.affected_services || [],
+                  isNew: false,
+                  affected_services: api.affected_services || [],
+                  raw: api
+                }));
+                // Merge API incidents with INITIAL_INCIDENTS, filtering out duplicates
+                setIncidents(prev => {
+                  const combined = [...mapped];
+                  INITIAL_INCIDENTS.forEach(ini => {
+                    if (!combined.some(c => c.id === ini.id)) {
+                      combined.push(ini);
+                    }
+                  });
+                  return combined;
+                });
+              }
+            }
+          } catch (e) {
+            console.error("Failed to fetch incidents", e);
+          }
+        }
+        fetchIncidents();
+      }, []);
+
+      // 2. Establish real-time WebSocket connection to /ws/live for live incident stream
+      useEffect(() => {
+        let wsUrl = '';
+        if (typeof location !== 'undefined' && location.protocol.startsWith('http') && location.port !== '8080') {
+          const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+          wsUrl = `${wsProto}//${location.host}/ws/live`;
+        } else {
+          wsUrl = 'ws://127.0.0.1:8000/ws/live';
+        }
+
+        let ws = new WebSocket(wsUrl);
+        
+        ws.onopen = () => console.log("WebSocket connected to /ws/live");
+        
+        ws.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'new_incident') {
+              const api = msg.data;
+              const mapped = {
+                id: api.incident_id,
+                severity: api.severity.toUpperCase(),
+                service: api.affected_services && api.affected_services.length > 0 ? api.affected_services[0] : 'unknown',
+                region: api.sources && api.sources.length > 0 ? api.sources[0] : 'us-east-1',
+                timestamp: 'Just now',
+                rootCause: api.root_cause_summary || api.root_cause?.root_cause || 'Analyzing incident...',
+                confidence: api.confidence ? Math.round(api.confidence * 100) : 94,
+                status: api.status.toUpperCase(),
+                elapsed: 0,
+                tags: api.affected_services || [],
+                isNew: true,
+                affected_services: api.affected_services || [],
+                raw: api
+              };
+              
+              setIncidents(prev => {
+                if (prev.some(i => i.id === mapped.id)) return prev;
+                return [mapped, ...prev];
+              });
+              
+              // Spoken notification from voice orb
+              setOrbMsg(`Critical incident detected on ${mapped.service}. Analyzing root cause now.`);
+              
+              // Trigger header alert flash & redirect to the new incident page
+              setFlash(mapped.service + ' incident');
+              setTimeout(() => {
+                setSelected(mapped);
+                setView('incident');
+                setFlash(null);
+              }, 2000);
+            }
+          } catch (e) {
+            console.error("Error processing WS message", e);
+          }
+        };
+        
+        ws.onclose = () => {
+          console.log("WebSocket disconnected, retrying in 5s...");
+        };
+        
+        return () => ws.close();
+      }, []);
+
+      // 3. Dynamic Service Topology: Update node statuses live based on selected incident
+      useEffect(() => {
+        if (!window.TOPOLOGY_NODES) return;
+        
+        if (!selected) {
+          // Default: restore INITIAL state statuses
+          const initialMap = { gateway: 'healthy', auth: 'degraded', payments: 'critical', user: 'healthy', postgres: 'critical', cache: 'healthy', notif: 'degraded' };
+          window.TOPOLOGY_NODES.forEach(n => {
+            n.status = initialMap[n.id] || 'healthy';
+          });
+          return;
+        }
+
+        // Active incident selected: highlight only affected nodes!
+        const affected = selected.affected_services || [];
+        const severity = (selected.severity || 'CRITICAL').toLowerCase();
+        
+        window.TOPOLOGY_NODES.forEach(n => {
+          const isAffected = affected.some(s => s.toLowerCase().includes(n.id));
+          if (isAffected) {
+            n.status = severity;
+          } else if (n.id === 'postgres' && (
+            affected.some(s => s.toLowerCase().includes('payments') || s.toLowerCase().includes('postgres')) ||
+            (selected.rootCause && selected.rootCause.toLowerCase().includes('db'))
+          )) {
+            n.status = severity;
+          } else {
+            n.status = 'healthy';
+          }
+        });
+      }, [selected]);
+
       function triggerChaos(scenario){
         setFlash(scenario.label);
+        
+        // Trigger chaos endpoint on backend!
+        fetch(`${API_BASE}/api/chaos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+          scenario: scenario.id === 'db-leak' ? 'db_connection_leak'
+                  : scenario.id === 'mem-leak' ? 'memory_leak'
+                  : scenario.id === 'latency-spike' ? 'network_latency_spike'
+                  : scenario.id === 'db-deadlock' ? 'database_deadlock'
+                  : 'api_cascade'
+        }),
+        }).catch(err => {
+          console.error("Failed to trigger real chaos on backend, falling back to client-side emulation", err);
+        });
+
         const newInc=createChaosIncident(scenario);
-        setTimeout(()=>{setIncidents(prev=>[newInc,...prev]);setOrbMsg(`Critical incident detected on ${newInc.service}. Analyzing root cause now.`)},900);
+        setTimeout(()=>{
+          setIncidents(prev=>[newInc,...prev]);
+          setOrbMsg(`Critical incident detected on ${newInc.service}. Analyzing root cause now.`);
+        },900);
         setTimeout(()=>goIncident(newInc),2300);
         setTimeout(()=>setFlash(null),2700);
       }
+
 
       return (
         <div style={{display:'flex',height:'100vh',overflow:'hidden',position:'relative',zIndex:10}}>
@@ -417,7 +643,7 @@
             <main style={{flex:1,overflow:'hidden'}}>
               {view==='dashboard'
                 ? <Dashboard incidents={incidents} onAnalyze={goIncident} onTrigger={triggerChaos} />
-                : <IncidentDetail incident={selected} onBack={()=>setView('dashboard')} />
+                : <IncidentDetail incident={selected} onBack={()=>setView('dashboard')} onSpeak={setOrbMsg} />
               }
             </main>
           </div>

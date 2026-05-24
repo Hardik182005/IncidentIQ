@@ -21,7 +21,7 @@ async def send_incident_alert(incident: Dict[str, Any]) -> bool:
         logger.warning("SLACK_WEBHOOK_URL not set — skipping Slack alert")
         return False
 
-    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
     severity = str(incident.get("severity", "unknown")).lower()
     emoji = _SEVERITY_EMOJI.get(severity, ":white_circle:")
     incident_id = incident.get("incident_id", "unknown")
@@ -85,13 +85,13 @@ async def send_incident_alert(incident: Dict[str, Any]) -> bool:
                     {
                         "type": "button",
                         "text": {"type": "plain_text", "text": "View Dashboard", "emoji": True},
-                        "url": f"{frontend_url}/incident/{incident_id}",
+                        "url": f"{frontend_url}/screens/dashboard.html?incident={incident_id}",
                         "style": "primary",
                     },
                     {
                         "type": "button",
                         "text": {"type": "plain_text", "text": "Open Runbook", "emoji": True},
-                        "url": f"{frontend_url}/runbooks",
+                        "url": f"{frontend_url}/screens/runbooks.html",
                     },
                 ],
             },
