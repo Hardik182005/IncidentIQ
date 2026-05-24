@@ -24,6 +24,7 @@ function VoiceOrb({ externalMessage, onExternalDone, incidentId }) {
   const [response, setResponse]     = useState('');
   const [showChips, setShowChips]   = useState(true);
   const [inputText, setInputText]   = useState(''); // For textual chat input
+  const [open, setOpen]   = useState(false); // Panel collapsed by default — click orb to open chat/presets
   
   const timers  = useRef([]);
   const barLoop = useRef(null);
@@ -135,13 +136,11 @@ function VoiceOrb({ externalMessage, onExternalDone, incidentId }) {
     }
   }
 
-  // Handle tap-to-start / tap-to-finish click on orb (microphone)
+  // Orb click: while listening it finishes; otherwise it opens/closes the chat panel.
   function handleOrbClick() {
-    if (state === 'idle') {
-      startListening();
-    } else if (state === 'listening') {
-      finishListening();
-    }
+    if (state === 'listening') { finishListening(); return; }
+    if (state !== 'idle') return;        // busy (processing/speaking) — ignore
+    setOpen(o => !o);
   }
 
   // Handle suggestion chips or typed text inputs
@@ -327,11 +326,11 @@ function VoiceOrb({ externalMessage, onExternalDone, incidentId }) {
   return (
     <div style={{
       position: 'fixed', bottom: '28px', right: '28px', zIndex: 1000,
-      display: 'flex', alignItems: 'flex-end', gap: '24px',
+      display: 'flex', alignItems: 'flex-end', gap: '24px', pointerEvents: 'none',
     }}>
 
       {/* Left Column: Chat interfaces stacked vertically */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', pointerEvents: 'auto' }}>
         
         {/* Speech / transcript bubble */}
         {(response || transcript) && (
@@ -359,7 +358,7 @@ function VoiceOrb({ externalMessage, onExternalDone, incidentId }) {
         )}
 
         {/* Suggestion chips (now laid out horizontally side-by-side to save height) */}
-        {showChips && state === 'idle' && (
+        {open && showChips && state === 'idle' && (
           <div style={{ display: 'flex', gap: '6px', animation: 'fade-in 0.6s ease', marginRight: '8px' }}>
             {CHIPS.map((chip, i) => (
               <button key={i} onClick={() => handleChipClick(chip)} style={{
@@ -375,8 +374,8 @@ function VoiceOrb({ externalMessage, onExternalDone, incidentId }) {
           </div>
         )}
 
-        {/* Textual Chat Input (when idle) */}
-        {state === 'idle' && (
+        {/* Textual Chat Input (when idle and panel open) */}
+        {open && state === 'idle' && (
           <form onSubmit={(e) => { e.preventDefault(); if (inputText.trim()) { handleChipClick(inputText); setInputText(''); } }} style={{
             display: 'flex', gap: '6px', background: 'rgba(6,6,18,0.85)',
             border: '1px solid rgba(255,255,255,0.18)', borderRadius: '20px',
@@ -394,6 +393,12 @@ function VoiceOrb({ externalMessage, onExternalDone, incidentId }) {
                 fontFamily: "'Space Grotesk', sans-serif", fontWeight: '600'
               }}
             />
+            <button type="button" onClick={() => startListening()} title="Voice input" style={{
+              background: 'rgba(139,92,246,0.22)', border: 'none',
+              borderRadius: '50%', width: '22px', height: '22px', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', color: '#ffffff',
+              fontSize: '11px', cursor: 'pointer', outline: 'none'
+            }}>🎤</button>
             <button type="submit" style={{
               background: 'rgba(255,255,255,0.14)', border: 'none',
               borderRadius: '50%', width: '22px', height: '22px', display: 'flex',
@@ -405,7 +410,7 @@ function VoiceOrb({ externalMessage, onExternalDone, incidentId }) {
       </div>
 
       {/* Right Column: Orb wrapper and dynamic state label */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', pointerEvents: 'auto' }}>
         
         <div
           onClick={handleOrbClick}
@@ -488,6 +493,14 @@ function VoiceOrb({ externalMessage, onExternalDone, incidentId }) {
             animation: 'fade-in 0.3s ease',
           }}>
             {{ listening:'LISTENING...', processing:'ANALYZING...', speaking:'SPEAKING...' }[state]}
+          </div>
+        )}
+        {state === 'idle' && (
+          <div style={{
+            color: '#9aa0ad', fontSize: '9px', fontFamily: "'JetBrains Mono', monospace",
+            letterSpacing: '0.1em', textAlign: 'center', whiteSpace: 'nowrap',
+          }}>
+            {open ? 'TAP TO CLOSE' : 'ASK IQ-SENTRY'}
           </div>
         )}
       </div>

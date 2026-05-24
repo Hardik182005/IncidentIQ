@@ -376,6 +376,14 @@ async def list_incidents():
     return _ok(incident_store.get_all_incidents())
 
 
+@app.get("/api/incidents/{incident_id}")
+async def get_incident(incident_id: str):
+    inc = incident_store.get_incident(incident_id)
+    if not inc:
+        _fail("Incident not found", 404)
+    return _ok(inc)
+
+
 @app.get("/api/incidents/{incident_id}/logs")
 async def get_incident_logs(incident_id: str):
     return _ok(incident_store.get_logs(incident_id))

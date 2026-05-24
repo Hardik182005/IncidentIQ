@@ -113,7 +113,7 @@
             setStages(prev => prev.map((s,i) => i===idx?{...s,status:'done'}:s));
             if (idx === AI_STAGES.length - 1) {
               timers.current.push(setTimeout(() => {
-                setTyping(true); let i=0; const text=AI_CONCLUSION;
+                setTyping(true); let i=0; const text=(incident&&incident.raw&&incident.raw.root_cause&&incident.raw.root_cause.root_cause)||(incident&&incident.rootCause)||AI_CONCLUSION;
                 function tick(){if(i>=text.length){setTyping(false);return}setConclusion(p=>p+text[i++]);timers.current.push(setTimeout(tick,16))}
                 tick();
               }, 400));
@@ -222,15 +222,31 @@
     }
 
 
-    function FixCommandsPanel() {
+    function FixCommandsPanel({ incident }) {
       const [copied, setCopied] = useState(null);
+      const [slackState, setSlackState] = useState('idle');
       const riskCol = { LOW:'#10B981', MEDIUM:'#F59E0B', HIGH:'#EF4444' };
       function copy(idx,cmd){navigator.clipboard?.writeText(cmd).catch(()=>{});setCopied(idx);setTimeout(()=>setCopied(null),2000)}
+      // Use the incident's real AI-generated fix commands when available.
+      const realFixes = incident && incident.raw && incident.raw.root_cause && incident.raw.root_cause.fix_commands;
+      const cmds = (Array.isArray(realFixes) && realFixes.length)
+        ? realFixes.map((c, i) => ({ title: 'AI-recommended fix ' + (i+1), risk: i===0?'LOW':i===1?'MEDIUM':'HIGH', cmd: typeof c === 'string' ? c : JSON.stringify(c, null, 2) }))
+        : FIX_COMMANDS;
+      async function sendSlack(){
+        if (!incident || !incident.id || slackState !== 'idle') return;
+        setSlackState('sending');
+        try {
+          const res = await fetch(`${API_BASE}/api/slack`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ incident_id: incident.id }) });
+          const data = await res.json();
+          setSlackState(res.ok && data && data.success && data.data && data.data.sent ? 'sent' : 'failed');
+        } catch(e){ setSlackState('failed'); }
+        setTimeout(()=>setSlackState('idle'), 2600);
+      }
       return (
         <div style={{background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:'12px',padding:'18px',height:'100%',display:'flex',flexDirection:'column'}}>
           <span style={{color:'#eeeef5',fontWeight:'600',fontSize:'13px',marginBottom:'14px',display:'block'}}>Fix Commands</span>
           <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:'12px'}}>
-            {FIX_COMMANDS.map((fix,idx) => (
+            {cmds.map((fix,idx) => (
               <div key={idx} style={{background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:'8px',overflow:'hidden'}}>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 12px',background:'rgba(255,255,255,0.025)',borderBottom:'1px solid rgba(255,255,255,0.05)'}}>
                   <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
@@ -243,9 +259,8 @@
               </div>
             ))}
             <div style={{display:'flex',gap:'8px',paddingTop:'2px'}}>
-              {[['Create PR →','#3B82F6'],['Slack Alert','#8B5CF6']].map(([label,col]) => (
-                <button key={label} style={{flex:1,background:`${col}12`,border:`1px solid ${col}2a`,color:col==='#3B82F6'?'#60A5FA':'#A78BFA',borderRadius:'8px',padding:'9px',fontSize:'12px',fontWeight:'600',cursor:'pointer',fontFamily:"'Space Grotesk',sans-serif",transition:'all 0.2s'}} onMouseEnter={e=>{e.target.style.background=`${col}22`;e.target.style.boxShadow=`0 0 14px ${col}40`}} onMouseLeave={e=>{e.target.style.background=`${col}12`;e.target.style.boxShadow='none'}}>{label}</button>
-              ))}
+              <button onClick={()=>{navigator.clipboard?.writeText(cmds.map(c=>c.cmd).join('\n\n')).catch(()=>{});setCopied('all');setTimeout(()=>setCopied(null),2000)}} style={{flex:1,background:'rgba(59,130,246,0.12)',border:'1px solid rgba(59,130,246,0.28)',color:'#60A5FA',borderRadius:'8px',padding:'9px',fontSize:'12px',fontWeight:'600',cursor:'pointer',fontFamily:"'Space Grotesk',sans-serif",transition:'all 0.2s'}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(59,130,246,0.22)'}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(59,130,246,0.12)'}}>{copied==='all'?'✓ Copied all':'Copy all fixes'}</button>
+              <button onClick={sendSlack} disabled={slackState!=='idle'} style={{flex:1,background:slackState==='sent'?'rgba(16,185,129,0.16)':'rgba(139,92,246,0.12)',border:`1px solid ${slackState==='sent'?'rgba(16,185,129,0.32)':'rgba(139,92,246,0.28)'}`,color:slackState==='sent'?'#10B981':'#A78BFA',borderRadius:'8px',padding:'9px',fontSize:'12px',fontWeight:'600',cursor:slackState==='idle'?'pointer':'default',fontFamily:"'Space Grotesk',sans-serif",transition:'all 0.2s'}}>{slackState==='sending'?'Sending…':slackState==='sent'?'✓ Sent to Slack':slackState==='failed'?'Send failed':'Send Slack Alert'}</button>
             </div>
           </div>
         </div>
@@ -299,7 +314,7 @@
           <div style={{flex:1,display:'flex',gap:'12px',minHeight:0}}>
             <div style={{flex:'0 0 32%',minHeight:0}}><AIAnalysisPanel incident={incident} onSpeak={onSpeak} /></div>
             <div style={{flex:'0 0 38%',minHeight:0}}><EvidencePanel logs={realLogs} /></div>
-            <div style={{flex:'0 0 30%',minHeight:0}}><FixCommandsPanel /></div>
+            <div style={{flex:'0 0 30%',minHeight:0}}><FixCommandsPanel incident={incident} /></div>
           </div>
 
           <div style={{flexShrink:0}}><HorizontalTimeline /></div>
@@ -508,16 +523,29 @@
       const deepLinkId = (typeof location !== 'undefined') ? new URLSearchParams(location.search).get('incident') : null;
       const deepLinkDone = useRef(false);
 
-      function openDeepLink(list) {
+      async function openDeepLink(list) {
         if (deepLinkDone.current || !deepLinkId) return;
         deepLinkDone.current = true;
         let match = list.find(i => i.id === deepLinkId);
         if (!match) {
-          // Incident not in store (cold start) or a demo INC-id — open a graceful detail view anyway.
+          // Not in the first page — fetch the exact incident by id (same one Slack notified about).
+          try {
+            const res = await fetch(`${API_BASE}/api/incidents/${deepLinkId}`);
+            const data = await res.json();
+            if (res.ok && data && data.success && data.data) {
+              match = mapApiIncident(data.data, false);
+              // Surface it in the live feed too, so it's visible in the Command Center.
+              setIncidents(prev => prev.some(i => i.id === match.id) ? prev : [match, ...prev]);
+            }
+          } catch (e) { console.error('Deep-link incident fetch failed', e); }
+        }
+        if (!match) {
+          // Cold start wiped the in-memory store (or a demo id) — explain rather than fake it.
           match = {
             id: deepLinkId, severity: 'CRITICAL', service: 'incident', region: 'us-east-1',
-            timestamp: 'Just now', rootCause: 'Loading incident analysis…', confidence: 94,
-            status: 'ACTIVE', elapsed: 0, tags: [], isNew: true, affected_services: [], raw: {}
+            timestamp: 'Just now',
+            rootCause: 'This incident is no longer in the live store — the server may have restarted since the Slack alert. Trigger a new incident to see a full analysis.',
+            confidence: 0, status: 'ACTIVE', elapsed: 0, tags: [], isNew: true, affected_services: [], raw: {}
           };
         }
         setSelected(match);

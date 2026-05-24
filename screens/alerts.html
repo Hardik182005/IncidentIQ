@@ -97,6 +97,9 @@
     .ch-btn:hover{background:rgba(255,255,255,0.06);color:var(--text)}
     @keyframes breathe{0%,100%{opacity:.7}50%{opacity:1}}
     @keyframes flicker{0%,88%,100%{opacity:1}92%{opacity:.2}}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#0d0d18;border:1px solid var(--border2);border-radius:10px;padding:12px 22px;font-size:13.5px;font-weight:700;color:var(--text);box-shadow:0 14px 44px rgba(0,0,0,0.65);opacity:0;pointer-events:none;transition:all 0.25s;z-index:600;display:flex;align-items:center;gap:9px}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toast::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
   </style>
 </head>
 <body>
@@ -246,8 +249,49 @@
     </div>
   </div>
 </div>
+<div class="toast" id="toast"></div>
 <script>
 setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false,timeZone:'Asia/Kolkata'})+' IST',1000);
+
+const toastEl=document.getElementById('toast');let toastT;
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),2600);}
+
+function refreshAlertCount(){
+  const n=document.querySelectorAll('.alert-card').length;
+  const tv=document.querySelector('.topbar .ts .tv'); if(tv) tv.textContent=n;
+  const badge=document.querySelector('.section-title .sec-badge'); if(badge) badge.textContent=n+' firing';
+}
+
+// Silence buttons — fade out & remove the alert card, update counts
+document.querySelectorAll('.alert-card .btn-xs.danger').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const card=btn.closest('.alert-card');
+    card.style.transition='opacity 0.25s,transform 0.25s';
+    card.style.opacity='0'; card.style.transform='translateX(24px)';
+    setTimeout(()=>{ card.remove(); refreshAlertCount(); },260);
+    toast('Alert silenced for 1 hour');
+  });
+});
+
+// Notification channel buttons — Configure saves; Connect prompts for an endpoint and marks Connected
+document.querySelectorAll('.channel-card').forEach(card=>{
+  const btn=card.querySelector('.ch-btn'); if(!btn) return;
+  const nameEl=card.querySelector('.ch-name');
+  const name=nameEl?nameEl.textContent:'Channel';
+  btn.addEventListener('click',()=>{
+    if(btn.textContent.trim()==='Connect'){
+      const url=prompt('Enter the '+name+' endpoint URL:','https://');
+      if(url && url.trim()){
+        const status=card.querySelector('.ch-status');
+        if(status) status.innerHTML='<span class="dot" style="background:var(--green)"></span><span style="color:var(--green);font-size:12px">Connected</span>';
+        btn.textContent='Configure'; btn.style.color=''; btn.style.borderColor='';
+        toast(name+' connected ✓');
+      }
+    } else {
+      toast(name+' configuration saved');
+    }
+  });
+});
 </script>
 </body>
 </html>
