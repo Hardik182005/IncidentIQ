@@ -1,0 +1,1733 @@
+// AUTO-GENERATED from dashboard-app.jsx by tools/build-dashboard.mjs — do not edit.
+(function () {
+// =============================================
+// DASHBOARD-APP.JSX — Command Center React app (auto-extracted from
+// screens/dashboard.html by tools/build-dashboard.mjs). Edit there or here,
+// then re-run the build. Do not edit dashboard-app.js by hand.
+// =============================================
+const {
+  useState,
+  useEffect,
+  useRef
+} = React;
+const API_BASE = typeof location !== 'undefined' && location.protocol.startsWith('http') && location.port !== '8080' ? '' : 'http://127.0.0.1:8000';
+
+/* ── INCIDENT DETAIL ─────────────────────────────── */
+function AIAnalysisPanel({
+  incident,
+  onSpeak
+}) {
+  const [stages, setStages] = useState(AI_STAGES.map(s => ({
+    ...s,
+    status: 'pending'
+  })));
+  const [conclusion, setConclusion] = useState('');
+  const [typing, setTyping] = useState(false);
+  const timers = useRef([]);
+  const handleSpeak = () => {
+    if (conclusion && onSpeak) {
+      onSpeak(conclusion);
+    }
+  };
+  useEffect(() => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    setStages(AI_STAGES.map(s => ({
+      ...s,
+      status: 'pending'
+    })));
+    setConclusion('');
+    setTyping(false);
+    let acc = 300;
+    AI_STAGES.forEach((stage, idx) => {
+      const startAt = acc,
+        dur = parseFloat(stage.processingTime) * 1000;
+      acc += dur + 350;
+      timers.current.push(setTimeout(() => setStages(prev => prev.map((s, i) => i === idx ? {
+        ...s,
+        status: 'running'
+      } : s)), startAt));
+      timers.current.push(setTimeout(() => {
+        setStages(prev => prev.map((s, i) => i === idx ? {
+          ...s,
+          status: 'done'
+        } : s));
+        if (idx === AI_STAGES.length - 1) {
+          timers.current.push(setTimeout(() => {
+            setTyping(true);
+            let i = 0;
+            const text = incident && incident.raw && incident.raw.root_cause && incident.raw.root_cause.root_cause || incident && incident.rootCause || AI_CONCLUSION;
+            function tick() {
+              if (i >= text.length) {
+                setTyping(false);
+                return;
+              }
+              setConclusion(p => p + text[i++]);
+              timers.current.push(setTimeout(tick, 16));
+            }
+            tick();
+          }, 400));
+        }
+      }, startAt + dur));
+    });
+    return () => timers.current.forEach(clearTimeout);
+  }, [incident?.id]);
+  const icon = {
+    pending: /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: '#52526a',
+        fontSize: '15px',
+        lineHeight: 1
+      }
+    }, "\u25CB"),
+    running: /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: '14px',
+        height: '14px',
+        border: '2px solid rgba(59,130,246,0.2)',
+        borderTopColor: '#3B82F6',
+        borderRadius: '50%',
+        animation: 'spin 0.7s linear infinite',
+        flexShrink: 0
+      }
+    }),
+    done: /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: '#10B981',
+        fontSize: '15px',
+        lineHeight: 1
+      }
+    }, "\u2713")
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: 'rgba(255,255,255,0.028)',
+      border: '1px solid rgba(255,255,255,0.065)',
+      borderRadius: '12px',
+      padding: '18px',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      marginBottom: '18px'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: '7px',
+      height: '7px',
+      borderRadius: '50%',
+      background: '#8B5CF6',
+      boxShadow: '0 0 8px rgba(139,92,246,0.6)',
+      display: 'inline-block',
+      animation: typing ? 'flicker 0.9s infinite' : 'breathe 2s infinite'
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#eeeef5',
+      fontWeight: '600',
+      fontSize: '13px'
+    }
+  }, "AI Analysis Pipeline")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px',
+      marginBottom: '16px'
+    }
+  }, stages.map((stage, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '11px',
+      padding: '10px 12px',
+      background: stage.status === 'running' ? 'rgba(59,130,246,0.08)' : stage.status === 'done' ? 'rgba(16,185,129,0.055)' : 'rgba(255,255,255,0.02)',
+      border: `1px solid ${stage.status === 'running' ? 'rgba(59,130,246,0.22)' : stage.status === 'done' ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.045)'}`,
+      borderRadius: '8px',
+      transition: 'all 0.4s'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flexShrink: 0
+    }
+  }, icon[stage.status]), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      marginBottom: '2px'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#eeeef5',
+      fontSize: '13px',
+      fontWeight: '600'
+    }
+  }, stage.name), /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: `${stage.color}16`,
+      color: stage.color,
+      border: `1px solid ${stage.color}2e`,
+      borderRadius: '3px',
+      padding: '1px 6px',
+      fontSize: '9px',
+      fontFamily: "'JetBrains Mono',monospace",
+      letterSpacing: '0.06em'
+    }
+  }, stage.status === 'running' ? 'RUNNING' : stage.status === 'done' ? `✓ ${stage.processingTime}` : 'PENDING')), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: '#52526a',
+      fontSize: '11px',
+      fontFamily: "'JetBrains Mono',monospace"
+    }
+  }, stage.role))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '8px'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#52526a',
+      fontSize: '10px',
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase'
+    }
+  }, "Root Cause"), conclusion && !typing && /*#__PURE__*/React.createElement("button", {
+    onClick: handleSpeak,
+    style: {
+      background: 'rgba(139,92,246,0.1)',
+      border: '1px solid rgba(139,92,246,0.22)',
+      color: '#A78BFA',
+      borderRadius: '4px',
+      padding: '1px 6px',
+      fontSize: '9px',
+      cursor: 'pointer',
+      fontFamily: "'Space Grotesk',sans-serif",
+      display: 'flex',
+      alignItems: 'center',
+      gap: '4px',
+      transition: 'all 0.15s'
+    },
+    onMouseEnter: e => {
+      e.target.style.background = 'rgba(139,92,246,0.2)';
+    },
+    onMouseLeave: e => {
+      e.target.style.background = 'rgba(139,92,246,0.1)';
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDD0A"), " Speak")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      background: 'rgba(139,92,246,0.06)',
+      border: '1px solid rgba(139,92,246,0.14)',
+      borderRadius: '8px',
+      padding: '12px',
+      color: '#eeeef5',
+      fontSize: '12px',
+      lineHeight: '1.7',
+      fontFamily: "'Space Grotesk',sans-serif",
+      minHeight: '80px'
+    }
+  }, conclusion || /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#52526a'
+    }
+  }, "Awaiting analysis..."), typing && /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: 'inline-block',
+      width: '7px',
+      height: '14px',
+      background: '#8B5CF6',
+      marginLeft: '2px',
+      verticalAlign: 'text-bottom',
+      animation: 'flicker 0.7s infinite'
+    }
+  })), conclusion && !typing && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '10px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      animation: 'fade-in 0.5s ease'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      height: '3px',
+      background: 'rgba(255,255,255,0.06)',
+      borderRadius: '2px',
+      overflow: 'hidden'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: '100%',
+      width: `${incident?.confidence || 94}%`,
+      background: 'linear-gradient(90deg,#3B82F6,#8B5CF6)',
+      borderRadius: '2px',
+      transition: 'width 1s ease'
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#8B5CF6',
+      fontSize: '13px',
+      fontWeight: '700',
+      fontFamily: "'JetBrains Mono',monospace"
+    }
+  }, incident?.confidence || 94, "%"))));
+}
+function EvidencePanel({
+  logs
+}) {
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('ALL');
+  const sourceLogs = logs && logs.length > 0 ? logs : FAKE_LOGS;
+  const visible = sourceLogs.filter(l => {
+    const level = (l.severity || l.level || 'INFO').toUpperCase();
+    const msg = (l.message || l.msg || '').toLowerCase();
+    const matchesFilter = filter === 'ALL' || level === filter;
+    const matchesSearch = !search || msg.includes(search.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+  const lStyle = {
+    ERROR: {
+      bg: 'rgba(239,68,68,0.09)',
+      col: '#EF4444'
+    },
+    WARN: {
+      bg: 'rgba(245,158,11,0.07)',
+      col: '#F59E0B'
+    },
+    INFO: {
+      bg: 'rgba(255,255,255,0.025)',
+      col: '#52526a'
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: 'rgba(255,255,255,0.028)',
+      border: '1px solid rgba(255,255,255,0.065)',
+      borderRadius: '12px',
+      padding: '18px',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '12px'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#eeeef5',
+      fontWeight: '600',
+      fontSize: '13px'
+    }
+  }, "Log Evidence"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: '4px'
+    }
+  }, ['ALL', 'ERROR', 'WARN', 'INFO'].map(f => /*#__PURE__*/React.createElement("button", {
+    key: f,
+    onClick: () => setFilter(f),
+    style: {
+      background: filter === f ? 'rgba(59,130,246,0.18)' : 'rgba(255,255,255,0.04)',
+      border: `1px solid ${filter === f ? 'rgba(59,130,246,0.38)' : 'rgba(255,255,255,0.07)'}`,
+      color: filter === f ? '#60A5FA' : '#52526a',
+      borderRadius: '4px',
+      padding: '2px 8px',
+      fontSize: '9px',
+      cursor: 'pointer',
+      fontFamily: "'JetBrains Mono',monospace",
+      letterSpacing: '0.06em',
+      transition: 'all 0.15s'
+    }
+  }, f)))), /*#__PURE__*/React.createElement("input", {
+    value: search,
+    onChange: e => setSearch(e.target.value),
+    placeholder: "Search logs\u2026",
+    style: {
+      background: 'rgba(255,255,255,0.04)',
+      border: '1px solid rgba(255,255,255,0.07)',
+      borderRadius: '6px',
+      padding: '7px 12px',
+      color: '#eeeef5',
+      fontSize: '11px',
+      fontFamily: "'JetBrains Mono',monospace",
+      marginBottom: '10px',
+      outline: 'none',
+      width: '100%'
+    },
+    onFocus: e => e.target.style.borderColor = 'rgba(59,130,246,0.4)',
+    onBlur: e => e.target.style.borderColor = 'rgba(255,255,255,0.07)'
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      overflowY: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '3px'
+    }
+  }, visible.map((log, i) => {
+    const level = (log.severity || log.level || 'INFO').toUpperCase();
+    const s = lStyle[level] || lStyle.INFO;
+    const msg = log.message || log.msg || '';
+    const ts = (log.timestamp || log.ts || '').split('T').pop() || '';
+    const isKey = log.key || level === 'ERROR';
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        background: isKey ? 'rgba(59,130,246,0.065)' : s.bg,
+        borderLeft: `2px solid ${isKey ? '#3B82F6' : s.col}40`,
+        borderRadius: '4px',
+        padding: '5px 9px',
+        fontFamily: "'JetBrains Mono',monospace",
+        fontSize: '11px',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '8px'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: '#52526a',
+        flexShrink: 0,
+        fontSize: '10px'
+      }
+    }, ts.slice(0, 12)), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: s.col,
+        flexShrink: 0,
+        fontWeight: '600',
+        fontSize: '10px',
+        letterSpacing: '0.04em'
+      }
+    }, level), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: '#9898b0',
+        lineHeight: '1.45',
+        flex: 1
+      }
+    }, msg), isKey && /*#__PURE__*/React.createElement("span", {
+      style: {
+        flexShrink: 0,
+        fontSize: '9px',
+        color: '#3B82F6',
+        background: 'rgba(59,130,246,0.12)',
+        border: '1px solid rgba(59,130,246,0.22)',
+        borderRadius: '3px',
+        padding: '1px 5px'
+      }
+    }, "KEY"));
+  })));
+}
+function FixCommandsPanel({
+  incident
+}) {
+  const [copied, setCopied] = useState(null);
+  const [slackState, setSlackState] = useState('idle');
+  const riskCol = {
+    LOW: '#10B981',
+    MEDIUM: '#F59E0B',
+    HIGH: '#EF4444'
+  };
+  function copy(idx, cmd) {
+    navigator.clipboard?.writeText(cmd).catch(() => {});
+    setCopied(idx);
+    setTimeout(() => setCopied(null), 2000);
+  }
+  // Use the incident's real AI-generated fix commands when available.
+  const realFixes = incident && incident.raw && incident.raw.root_cause && incident.raw.root_cause.fix_commands;
+  const cmds = Array.isArray(realFixes) && realFixes.length ? realFixes.map((c, i) => ({
+    title: 'AI-recommended fix ' + (i + 1),
+    risk: i === 0 ? 'LOW' : i === 1 ? 'MEDIUM' : 'HIGH',
+    cmd: typeof c === 'string' ? c : JSON.stringify(c, null, 2)
+  })) : FIX_COMMANDS;
+  async function sendSlack() {
+    if (!incident || !incident.id || slackState !== 'idle') return;
+    setSlackState('sending');
+    try {
+      const res = await fetch(`${API_BASE}/api/slack`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          incident_id: incident.id
+        })
+      });
+      const data = await res.json();
+      setSlackState(res.ok && data && data.success && data.data && data.data.sent ? 'sent' : 'failed');
+    } catch (e) {
+      setSlackState('failed');
+    }
+    setTimeout(() => setSlackState('idle'), 2600);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: 'rgba(255,255,255,0.028)',
+      border: '1px solid rgba(255,255,255,0.065)',
+      borderRadius: '12px',
+      padding: '18px',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#eeeef5',
+      fontWeight: '600',
+      fontSize: '13px',
+      marginBottom: '14px',
+      display: 'block'
+    }
+  }, "Fix Commands"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      overflowY: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px'
+    }
+  }, cmds.map((fix, idx) => /*#__PURE__*/React.createElement("div", {
+    key: idx,
+    style: {
+      background: 'rgba(255,255,255,0.028)',
+      border: '1px solid rgba(255,255,255,0.065)',
+      borderRadius: '8px',
+      overflow: 'hidden'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '8px',
+      padding: '9px 12px',
+      background: 'rgba(255,255,255,0.025)',
+      borderBottom: '1px solid rgba(255,255,255,0.05)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: `${riskCol[fix.risk]}12`,
+      color: riskCol[fix.risk],
+      border: `1px solid ${riskCol[fix.risk]}2e`,
+      borderRadius: '3px',
+      padding: '2px 7px',
+      fontSize: '9px',
+      fontFamily: "'JetBrains Mono',monospace",
+      letterSpacing: '0.06em',
+      flexShrink: 0,
+      whiteSpace: 'nowrap'
+    }
+  }, fix.risk), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#9898b0',
+      fontSize: '11px',
+      fontWeight: '500',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+      minWidth: 0
+    }
+  }, fix.title)), /*#__PURE__*/React.createElement("button", {
+    onClick: () => copy(idx, fix.cmd),
+    style: {
+      flexShrink: 0,
+      whiteSpace: 'nowrap',
+      background: copied === idx ? 'rgba(16,185,129,0.14)' : 'rgba(255,255,255,0.06)',
+      border: `1px solid ${copied === idx ? 'rgba(16,185,129,0.28)' : 'rgba(255,255,255,0.09)'}`,
+      color: copied === idx ? '#10B981' : '#9898b0',
+      borderRadius: '5px',
+      padding: '3px 10px',
+      fontSize: '10px',
+      cursor: 'pointer',
+      fontFamily: "'Space Grotesk',sans-serif",
+      transition: 'all 0.2s'
+    }
+  }, copied === idx ? '✓ Copied' : 'Copy')), /*#__PURE__*/React.createElement("pre", {
+    style: {
+      padding: '11px 13px',
+      color: '#cbd5e1',
+      fontSize: '11.5px',
+      fontFamily: "'JetBrains Mono',monospace",
+      lineHeight: '1.65',
+      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+      overflowWrap: 'anywhere',
+      margin: 0
+    }
+  }, /*#__PURE__*/React.createElement("code", null, fix.cmd)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: '8px',
+      paddingTop: '2px'
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      navigator.clipboard?.writeText(cmds.map(c => c.cmd).join('\n\n')).catch(() => {});
+      setCopied('all');
+      setTimeout(() => setCopied(null), 2000);
+    },
+    style: {
+      flex: 1,
+      background: 'rgba(59,130,246,0.12)',
+      border: '1px solid rgba(59,130,246,0.28)',
+      color: '#60A5FA',
+      borderRadius: '8px',
+      padding: '9px',
+      fontSize: '12px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      fontFamily: "'Space Grotesk',sans-serif",
+      transition: 'all 0.2s'
+    },
+    onMouseEnter: e => {
+      e.currentTarget.style.background = 'rgba(59,130,246,0.22)';
+    },
+    onMouseLeave: e => {
+      e.currentTarget.style.background = 'rgba(59,130,246,0.12)';
+    }
+  }, copied === 'all' ? '✓ Copied all' : 'Copy all fixes'), /*#__PURE__*/React.createElement("button", {
+    onClick: sendSlack,
+    disabled: slackState !== 'idle',
+    style: {
+      flex: 1,
+      background: slackState === 'sent' ? 'rgba(16,185,129,0.16)' : 'rgba(139,92,246,0.12)',
+      border: `1px solid ${slackState === 'sent' ? 'rgba(16,185,129,0.32)' : 'rgba(139,92,246,0.28)'}`,
+      color: slackState === 'sent' ? '#10B981' : '#A78BFA',
+      borderRadius: '8px',
+      padding: '9px',
+      fontSize: '12px',
+      fontWeight: '600',
+      cursor: slackState === 'idle' ? 'pointer' : 'default',
+      fontFamily: "'Space Grotesk',sans-serif",
+      transition: 'all 0.2s'
+    }
+  }, slackState === 'sending' ? 'Sending…' : slackState === 'sent' ? '✓ Sent to Slack' : slackState === 'failed' ? 'Send failed' : 'Send Slack Alert'))));
+}
+function IncidentDetail({
+  incident,
+  onBack,
+  onSpeak
+}) {
+  const [elapsed, setElapsed] = useState(incident?.elapsed || 0);
+  const [realLogs, setRealLogs] = useState([]);
+  useEffect(() => {
+    setElapsed(incident?.elapsed || 0);
+    const t = setInterval(() => setElapsed(e => e + 1), 1000);
+    return () => clearInterval(t);
+  }, [incident?.id]);
+  useEffect(() => {
+    async function loadLogs() {
+      try {
+        const res = await fetch(`${API_BASE}/api/incidents/${incident.id}/logs`);
+        const data = await res.json();
+        if (res.ok && data && data.success) {
+          setRealLogs(data.data || []);
+        }
+      } catch (e) {
+        console.error("Failed to load real logs", e);
+      }
+    }
+    if (incident && incident.id) {
+      loadLogs();
+    }
+  }, [incident?.id]);
+  if (!incident) return null;
+  const cfg = SEVERITY_CONFIG[incident.severity],
+    isCrit = incident.severity === 'CRITICAL';
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '16px',
+      gap: '14px',
+      animation: 'fade-in 0.3s ease',
+      overflow: 'hidden'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '14px',
+      padding: '12px 16px',
+      flexShrink: 0,
+      background: 'rgba(255,255,255,0.028)',
+      border: `1px solid ${isCrit ? 'rgba(239,68,68,0.22)' : 'rgba(255,255,255,0.065)'}`,
+      borderRadius: '10px'
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: onBack,
+    style: {
+      background: 'rgba(255,255,255,0.055)',
+      border: '1px solid rgba(255,255,255,0.09)',
+      color: '#9898b0',
+      borderRadius: '6px',
+      padding: '5px 12px',
+      fontSize: '11px',
+      cursor: 'pointer',
+      fontFamily: "'Space Grotesk',sans-serif",
+      transition: 'all 0.15s'
+    },
+    onMouseEnter: e => {
+      e.target.style.background = 'rgba(255,255,255,0.1)';
+      e.target.style.color = '#eeeef5';
+    },
+    onMouseLeave: e => {
+      e.target.style.background = 'rgba(255,255,255,0.055)';
+      e.target.style.color = '#9898b0';
+    }
+  }, "\u2190 Back"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: cfg.bg,
+      color: cfg.color,
+      border: `1px solid ${cfg.color}35`,
+      borderRadius: '4px',
+      padding: '2px 9px',
+      fontSize: '10px',
+      fontFamily: "'JetBrains Mono',monospace",
+      fontWeight: '600',
+      letterSpacing: '0.1em',
+      boxShadow: isCrit ? `0 0 12px ${cfg.glow}` : 'none'
+    }
+  }, isCrit && /*#__PURE__*/React.createElement("span", {
+    style: {
+      marginRight: '3px',
+      animation: 'flicker 2s infinite'
+    }
+  }, "\u25CF"), incident.severity), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#52526a',
+      fontSize: '11px',
+      fontFamily: "'JetBrains Mono',monospace"
+    }
+  }, incident.id), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#eeeef5',
+      fontSize: '15px',
+      fontWeight: '600',
+      letterSpacing: '-0.02em'
+    }
+  }, incident.service), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#52526a',
+      fontSize: '11px'
+    }
+  }, incident.region), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginLeft: 'auto',
+      textAlign: 'right'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: '#52526a',
+      fontSize: '9px',
+      letterSpacing: '0.1em',
+      marginBottom: '1px'
+    }
+  }, "ELAPSED"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: '#EF4444',
+      fontSize: '17px',
+      fontFamily: "'JetBrains Mono',monospace",
+      fontWeight: '700'
+    }
+  }, formatElapsed(elapsed)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      display: 'flex',
+      gap: '12px',
+      minHeight: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: '0 0 30%',
+      minHeight: 0
+    }
+  }, /*#__PURE__*/React.createElement(AIAnalysisPanel, {
+    incident: incident,
+    onSpeak: onSpeak
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: '0 0 33%',
+      minHeight: 0
+    }
+  }, /*#__PURE__*/React.createElement(EvidencePanel, {
+    logs: realLogs
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: '0 0 37%',
+      minHeight: 0
+    }
+  }, /*#__PURE__*/React.createElement(FixCommandsPanel, {
+    incident: incident
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement(HorizontalTimeline, null)));
+}
+
+/* ── DASHBOARD ───────────────────────────────────── */
+function ChaosButton({
+  onTrigger
+}) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const h = e => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    setTimeout(() => document.addEventListener('click', h), 0);
+    return () => document.removeEventListener('click', h);
+  }, [open]);
+  function pick(s) {
+    setOpen(false);
+    setLoading(true);
+    onTrigger(s);
+    setTimeout(() => setLoading(false), 3200);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    ref: ref,
+    style: {
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => !loading && setOpen(o => !o),
+    style: {
+      background: loading ? 'rgba(239,68,68,0.18)' : 'rgba(239,68,68,0.11)',
+      border: `1px solid rgba(239,68,68,${loading ? .52 : .28})`,
+      color: '#EF4444',
+      borderRadius: '8px',
+      padding: '7px 14px',
+      fontSize: '12px',
+      fontWeight: '600',
+      cursor: loading ? 'default' : 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      fontFamily: "'Space Grotesk',sans-serif",
+      transition: 'all 0.2s',
+      boxShadow: loading ? '0 0 18px rgba(239,68,68,0.28)' : 'none'
+    },
+    onMouseEnter: e => {
+      if (!loading) {
+        e.currentTarget.style.background = 'rgba(239,68,68,0.2)';
+        e.currentTarget.style.boxShadow = '0 0 16px rgba(239,68,68,0.32)';
+      }
+    },
+    onMouseLeave: e => {
+      if (!loading) {
+        e.currentTarget.style.background = 'rgba(239,68,68,0.11)';
+        e.currentTarget.style.boxShadow = 'none';
+      }
+    }
+  }, loading ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '12px',
+      height: '12px',
+      border: '2px solid rgba(239,68,68,0.3)',
+      borderTopColor: '#EF4444',
+      borderRadius: '50%',
+      animation: 'spin 0.7s linear infinite'
+    }
+  }) : /*#__PURE__*/React.createElement("span", null, "\u26A1"), "Trigger Incident"), open && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      top: '100%',
+      right: 0,
+      marginTop: '6px',
+      background: '#0d0d1e',
+      border: '1px solid rgba(239,68,68,0.18)',
+      borderRadius: '10px',
+      padding: '7px',
+      zIndex: 200,
+      minWidth: '210px',
+      boxShadow: '0 10px 40px rgba(0,0,0,0.6)',
+      animation: 'slide-down 0.18s ease'
+    }
+  }, CHAOS_SCENARIOS.map(s => /*#__PURE__*/React.createElement("button", {
+    key: s.id,
+    onClick: () => pick(s),
+    style: {
+      display: 'block',
+      width: '100%',
+      textAlign: 'left',
+      background: 'transparent',
+      border: 'none',
+      color: '#9898b0',
+      padding: '8px 12px',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontSize: '12px',
+      fontFamily: "'Space Grotesk',sans-serif",
+      transition: 'all 0.14s'
+    },
+    onMouseEnter: e => {
+      e.target.style.background = 'rgba(239,68,68,0.1)';
+      e.target.style.color = '#EF4444';
+    },
+    onMouseLeave: e => {
+      e.target.style.background = 'transparent';
+      e.target.style.color = '#9898b0';
+    }
+  }, s.label))));
+}
+function IncidentFeed({
+  incidents,
+  onAnalyze,
+  onTrigger
+}) {
+  const active = incidents.filter(i => i.status === 'ACTIVE' || i.status === 'ANALYZING').length;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minHeight: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '16px',
+      borderBottom: '1px solid rgba(255,255,255,0.07)',
+      overflow: 'hidden'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '14px',
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'relative',
+      width: '10px',
+      height: '10px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '8px',
+      height: '8px',
+      borderRadius: '50%',
+      background: '#EF4444',
+      boxShadow: '0 0 8px rgba(239,68,68,0.8)',
+      position: 'absolute',
+      top: '1px',
+      left: '1px'
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      inset: 0,
+      borderRadius: '50%',
+      background: 'rgba(239,68,68,0.3)',
+      animation: 'pulse-ring 2s ease-out infinite'
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#eeeef5',
+      fontWeight: '600',
+      fontSize: '14px',
+      letterSpacing: '-0.01em'
+    }
+  }, "Live Incident Feed"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: 'rgba(239,68,68,0.1)',
+      color: '#EF4444',
+      border: '1px solid rgba(239,68,68,0.22)',
+      borderRadius: '10px',
+      padding: '1px 9px',
+      fontSize: '11px',
+      fontFamily: "'JetBrains Mono',monospace"
+    }
+  }, active, " active")), /*#__PURE__*/React.createElement(ChaosButton, {
+    onTrigger: onTrigger
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      overflowY: 'auto',
+      paddingRight: '4px'
+    }
+  }, incidents.map(inc => /*#__PURE__*/React.createElement(IncidentCard, {
+    key: inc.id,
+    incident: inc,
+    onAnalyze: onAnalyze,
+    isNew: inc.isNew
+  }))));
+}
+function TopologyPanel() {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      flexShrink: 0,
+      padding: '12px 16px 16px',
+      background: 'rgba(255,255,255,0.012)',
+      maxHeight: '40%',
+      overflowY: 'auto'
+    }
+  }, /*#__PURE__*/React.createElement(ServiceTopology, null), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: '#9898b0',
+      fontSize: '10px',
+      marginTop: '2px',
+      fontFamily: "'JetBrains Mono',monospace"
+    }
+  }, "Full error-rate, latency & throughput charts live on the ", /*#__PURE__*/React.createElement("a", {
+    href: "metrics.html",
+    style: {
+      color: '#cbd5e1',
+      textDecoration: 'underline'
+    }
+  }, "Metrics"), " page."));
+}
+function Dashboard({
+  incidents,
+  onAnalyze,
+  onTrigger
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden'
+    }
+  }, /*#__PURE__*/React.createElement(IncidentFeed, {
+    incidents: incidents,
+    onAnalyze: onAnalyze,
+    onTrigger: onTrigger
+  }), /*#__PURE__*/React.createElement(TopologyPanel, null));
+}
+
+/* ── APP SHELL ───────────────────────────────────── */
+function Sidebar({
+  incidents,
+  view,
+  onNavigate
+}) {
+  const critCount = incidents.filter(i => i.severity === 'CRITICAL' && i.status !== 'RESOLVED').length;
+  const ic = c => /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24",
+    width: "15",
+    height: "15",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.8",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    style: {
+      verticalAlign: 'middle'
+    }
+  }, c);
+  const nav = [{
+    id: 'dashboard',
+    label: 'Command Center',
+    icon: ic(/*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("rect", {
+      x: "3",
+      y: "3",
+      width: "7",
+      height: "7",
+      rx: "1"
+    }), /*#__PURE__*/React.createElement("rect", {
+      x: "14",
+      y: "3",
+      width: "7",
+      height: "7",
+      rx: "1"
+    }), /*#__PURE__*/React.createElement("rect", {
+      x: "14",
+      y: "14",
+      width: "7",
+      height: "7",
+      rx: "1"
+    }), /*#__PURE__*/React.createElement("rect", {
+      x: "3",
+      y: "14",
+      width: "7",
+      height: "7",
+      rx: "1"
+    })))
+  }, {
+    id: 'incidents',
+    label: 'Incidents',
+    icon: ic(/*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
+      d: "M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "12",
+      y1: "9",
+      x2: "12",
+      y2: "13"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "12",
+      y1: "17",
+      x2: "12.01",
+      y2: "17"
+    }))),
+    badge: critCount
+  }, {
+    id: 'metrics',
+    label: 'Metrics',
+    icon: ic(/*#__PURE__*/React.createElement("path", {
+      d: "M22 12h-4l-3 9L9 3l-3 9H2"
+    }))
+  }, {
+    id: 'alerts',
+    label: 'Alerts',
+    icon: ic(/*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
+      d: "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M10.3 21a1.94 1.94 0 0 0 3.4 0"
+    })))
+  }, {
+    id: 'runbooks',
+    label: 'Runbooks',
+    icon: ic(/*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
+      d: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+    })))
+  }, {
+    id: 'integrations',
+    label: 'Data Room',
+    icon: ic(/*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("ellipse", {
+      cx: "12",
+      cy: "5",
+      rx: "9",
+      ry: "3"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M3 5v14a9 3 0 0 0 18 0V5"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M3 12a9 3 0 0 0 18 0"
+    })))
+  }];
+  const providers = [{
+    name: 'Groq',
+    lat: '12ms'
+  }, {
+    name: 'Gemini',
+    lat: '34ms'
+  }, {
+    name: 'OpenAI',
+    lat: '28ms'
+  }];
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '218px',
+      flexShrink: 0,
+      background: 'rgba(6,6,8,0.92)',
+      borderRight: '1px solid rgba(255,255,255,0.18)',
+      display: 'flex',
+      flexDirection: 'column',
+      backdropFilter: 'blur(16px)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '18px 18px 16px',
+      borderBottom: '1px solid rgba(255,255,255,0.18)'
+    }
+  }, /*#__PURE__*/React.createElement("a", {
+    href: "../index.html",
+    title: "Back to landing page",
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      textDecoration: 'none',
+      cursor: 'pointer'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'relative'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '34px',
+      height: '34px',
+      background: 'linear-gradient(135deg,#ffffff,#64748b)',
+      borderRadius: '9px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 0 22px rgba(255,255,255,0.28)'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#000000',
+      fontSize: '13px',
+      fontWeight: '800',
+      letterSpacing: '-0.05em'
+    }
+  }, "IQ")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      bottom: '-1px',
+      right: '-1px',
+      width: '9px',
+      height: '9px',
+      borderRadius: '50%',
+      background: '#10B981',
+      border: '2px solid #000000',
+      boxShadow: '0 0 7px rgba(16,185,129,0.8)',
+      animation: 'breathe 2s ease-in-out infinite'
+    }
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: '#ffffff',
+      fontWeight: '700',
+      fontSize: '15px',
+      letterSpacing: '-0.03em',
+      lineHeight: 1.1
+    }
+  }, "IncidentIQ"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: '#cbd5e1',
+      fontSize: '9px',
+      letterSpacing: '0.12em',
+      textTransform: 'uppercase',
+      fontWeight: '700'
+    }
+  }, "SRE Command Center")))), /*#__PURE__*/React.createElement("nav", {
+    style: {
+      padding: '10px 9px',
+      flex: 1
+    }
+  }, nav.map(item => {
+    const active = view === item.id || item.id === 'incidents' && view === 'incident' || item.id === 'dashboard' && view === 'dashboard';
+    return /*#__PURE__*/React.createElement("div", {
+      key: item.id,
+      onClick: () => {
+        if (item.id === 'dashboard') {
+          onNavigate('dashboard');
+        } else {
+          window.location.href = item.id + '.html';
+        }
+      },
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '9px',
+        padding: '7px 10px',
+        borderRadius: '7px',
+        cursor: 'pointer',
+        marginBottom: '2px',
+        background: active ? 'rgba(255,255,255,0.09)' : 'transparent',
+        border: `1px solid ${active ? 'rgba(255,255,255,0.22)' : 'transparent'}`,
+        transition: 'all 0.14s'
+      },
+      onMouseEnter: e => {
+        if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.048)';
+      },
+      onMouseLeave: e => {
+        if (!active) e.currentTarget.style.background = 'transparent';
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: active ? '#ffffff' : '#cbd5e1',
+        fontSize: '13px',
+        width: '16px',
+        textAlign: 'center',
+        fontWeight: '700'
+      }
+    }, item.icon), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: active ? '#ffffff' : '#f1f5f9',
+        fontSize: '13px',
+        fontWeight: active ? '700' : '600',
+        flex: 1
+      }
+    }, item.label), item.badge > 0 && /*#__PURE__*/React.createElement("span", {
+      style: {
+        background: 'rgba(239,68,68,0.18)',
+        color: '#EF4444',
+        border: '1px solid rgba(239,68,68,0.28)',
+        borderRadius: '8px',
+        padding: '0 6px',
+        fontSize: '10px',
+        fontFamily: "'JetBrains Mono',monospace",
+        fontWeight: '700'
+      }
+    }, item.badge));
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '12px 16px',
+      borderTop: '1px solid rgba(255,255,255,0.18)',
+      borderBottom: '1px solid rgba(255,255,255,0.18)'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: '#cbd5e1',
+      fontSize: '9px',
+      letterSpacing: '0.12em',
+      marginBottom: '9px',
+      textTransform: 'uppercase',
+      fontWeight: '700'
+    }
+  }, "AI Providers"), providers.map(p => /*#__PURE__*/React.createElement("div", {
+    key: p.name,
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      marginBottom: '7px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '6px',
+      height: '6px',
+      borderRadius: '50%',
+      flexShrink: 0,
+      background: '#10B981',
+      boxShadow: '0 0 6px rgba(16,185,129,0.65)',
+      animation: 'breathe 2.5s ease-in-out infinite'
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#f1f5f9',
+      fontSize: '12px',
+      flex: 1,
+      fontWeight: '600'
+    }
+  }, p.name), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#cbd5e1',
+      fontSize: '10px',
+      fontFamily: "'JetBrains Mono',monospace",
+      fontWeight: '600'
+    }
+  }, p.lat)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '12px 16px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: '6px',
+      height: '6px',
+      borderRadius: '50%',
+      background: '#10B981',
+      boxShadow: '0 0 6px rgba(16,185,129,0.7)',
+      animation: 'breathe 1.6s ease-in-out infinite'
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#cbd5e1',
+      fontSize: '11px',
+      fontFamily: "'JetBrains Mono',monospace",
+      fontWeight: '600'
+    }
+  }, "WS Connected"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginLeft: 'auto',
+      display: 'flex',
+      gap: '3px'
+    }
+  }, [0, 1, 2].map(i => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      width: '3px',
+      height: `${6 + i * 3}px`,
+      background: '#10B981',
+      borderRadius: '1px',
+      opacity: 0.6 + i * 0.15
+    }
+  })))));
+}
+function Header({
+  incidents,
+  flash
+}) {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const critCount = incidents.filter(i => i.severity === 'CRITICAL').length;
+  const affected = incidents.filter(i => i.status !== 'RESOLVED').length;
+  const stats = [{
+    label: 'ACTIVE INCIDENTS',
+    value: critCount,
+    color: '#EF4444'
+  }, {
+    label: 'SERVICES AFFECTED',
+    value: `${affected}/7`,
+    color: '#F59E0B'
+  }, {
+    label: 'SYSTEM HEALTH',
+    value: '94.2%',
+    color: '#10B981'
+  }, {
+    label: 'MTTR',
+    value: '4m 32s',
+    color: '#06B6D4'
+  }];
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: '9px 20px',
+      borderBottom: '1px solid rgba(255,255,255,0.065)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '20px',
+      background: 'rgba(6,6,18,0.5)',
+      backdropFilter: 'blur(10px)',
+      flexShrink: 0,
+      position: 'relative',
+      overflow: 'hidden',
+      minHeight: '52px'
+    }
+  }, flash && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      inset: 0,
+      background: 'rgba(239,68,68,0.11)',
+      animation: 'flash-red 2.5s ease forwards',
+      zIndex: 5,
+      pointerEvents: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      animation: 'flicker 0.4s infinite',
+      fontSize: '14px'
+    }
+  }, "\uD83D\uDEA8"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: '#EF4444',
+      fontWeight: '700',
+      fontSize: '13px',
+      letterSpacing: '0.05em'
+    }
+  }, "INCIDENT DETECTED \u2014 ", flash))), stats.map(s => /*#__PURE__*/React.createElement("div", {
+    key: s.label
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: '#52526a',
+      fontSize: '9px',
+      letterSpacing: '0.1em',
+      marginBottom: '1px'
+    }
+  }, s.label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: s.color,
+      fontSize: '15px',
+      fontWeight: '700',
+      fontFamily: "'JetBrains Mono',monospace",
+      textShadow: `0 0 10px ${s.color}55`
+    }
+  }, s.value))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginLeft: 'auto',
+      color: '#52526a',
+      fontSize: '11px',
+      fontFamily: "'JetBrains Mono',monospace",
+      letterSpacing: '0.05em'
+    }
+  }, time.toLocaleTimeString('en-US', {
+    hour12: false,
+    timeZone: 'Asia/Kolkata'
+  }), " IST"));
+}
+function App() {
+  const [view, setView] = useState('dashboard');
+  const [selected, setSelected] = useState(null);
+  const [incidents, setIncidents] = useState(INITIAL_INCIDENTS);
+  const [flash, setFlash] = useState(null);
+  const [orbMsg, setOrbMsg] = useState(null);
+  function goIncident(inc) {
+    setSelected(inc);
+    setView('incident');
+  }
+
+  // Helper to format timestamps
+  function formatTimeAgo(isoString) {
+    try {
+      const diff = Date.now() - new Date(isoString).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'Just now';
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      return new Date(isoString).toLocaleDateString();
+    } catch (e) {
+      return 'Just now';
+    }
+  }
+
+  // Normalize an /api incident into the UI incident shape (shared by fetch + WS).
+  function mapApiIncident(api, isNew) {
+    return {
+      id: api.incident_id,
+      severity: (api.severity || 'critical').toUpperCase(),
+      service: api.affected_services && api.affected_services.length > 0 ? api.affected_services[0] : 'unknown',
+      region: api.sources && api.sources.length > 0 ? api.sources[0] : 'us-east-1',
+      timestamp: isNew ? 'Just now' : formatTimeAgo(api.timestamp),
+      rootCause: api.root_cause_summary || api.root_cause && api.root_cause.root_cause || 'Analyzing incident...',
+      confidence: api.confidence || api.confidence === 0 ? Math.round(api.confidence * 100) : 94,
+      status: (api.status || 'active').toUpperCase(),
+      elapsed: isNew ? 0 : api.processing_ms ? Math.round(api.processing_ms / 1000) : 120,
+      tags: api.affected_services || [],
+      isNew: !!isNew,
+      affected_services: api.affected_services || [],
+      raw: api
+    };
+  }
+
+  // Deep link: ?incident=<id> (Slack "View Dashboard", incidents table row) opens that incident directly.
+  const deepLinkId = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('incident') : null;
+  const deepLinkDone = useRef(false);
+  async function openDeepLink(list) {
+    if (deepLinkDone.current || !deepLinkId) return;
+    deepLinkDone.current = true;
+    let match = list.find(i => i.id === deepLinkId);
+    if (!match) {
+      // Not in the first page — fetch the exact incident by id (same one Slack notified about).
+      try {
+        const res = await fetch(`${API_BASE}/api/incidents/${deepLinkId}`);
+        const data = await res.json();
+        if (res.ok && data && data.success && data.data) {
+          match = mapApiIncident(data.data, false);
+          // Surface it in the live feed too, so it's visible in the Command Center.
+          setIncidents(prev => prev.some(i => i.id === match.id) ? prev : [match, ...prev]);
+        }
+      } catch (e) {
+        console.error('Deep-link incident fetch failed', e);
+      }
+    }
+    if (!match) {
+      // Cold start wiped the in-memory store (or a demo id) — explain rather than fake it.
+      match = {
+        id: deepLinkId,
+        severity: 'CRITICAL',
+        service: 'incident',
+        region: 'us-east-1',
+        timestamp: 'Just now',
+        rootCause: 'This incident is no longer in the live store — the server may have restarted since the Slack alert. Trigger a new incident to see a full analysis.',
+        confidence: 0,
+        status: 'ACTIVE',
+        elapsed: 0,
+        tags: [],
+        isNew: true,
+        affected_services: [],
+        raw: {}
+      };
+    }
+    setSelected(match);
+    setView('incident');
+  }
+
+  // 1. Fetch historical incidents from /api/incidents on mount, then resolve any deep link.
+  useEffect(() => {
+    async function fetchIncidents() {
+      let combined = [...INITIAL_INCIDENTS];
+      try {
+        const res = await fetch(`${API_BASE}/api/incidents`);
+        const data = await res.json();
+        if (res.ok && data && data.success) {
+          const apiIncidents = data.data || [];
+          const mapped = apiIncidents.map(api => mapApiIncident(api, false));
+          combined = [...mapped];
+          INITIAL_INCIDENTS.forEach(ini => {
+            if (!combined.some(c => c.id === ini.id)) combined.push(ini);
+          });
+          setIncidents(combined);
+        }
+      } catch (e) {
+        console.error("Failed to fetch incidents", e);
+      }
+      openDeepLink(combined);
+    }
+    fetchIncidents();
+  }, []);
+
+  // 2. Establish real-time WebSocket connection to /ws/live for live incident stream
+  useEffect(() => {
+    let wsUrl = '';
+    if (typeof location !== 'undefined' && location.protocol.startsWith('http') && location.port !== '8080') {
+      const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${wsProto}//${location.host}/ws/live`;
+    } else {
+      wsUrl = 'ws://127.0.0.1:8000/ws/live';
+    }
+    let ws = new WebSocket(wsUrl);
+    ws.onopen = () => console.log("WebSocket connected to /ws/live");
+    ws.onmessage = event => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'new_incident') {
+          const mapped = mapApiIncident(msg.data, true);
+          setIncidents(prev => {
+            if (prev.some(i => i.id === mapped.id)) return prev;
+            return [mapped, ...prev];
+          });
+
+          // Spoken notification from voice orb
+          setOrbMsg(`Critical incident detected on ${mapped.service}. Analyzing root cause now.`);
+
+          // Trigger header alert flash & redirect to the new incident page — unless the
+          // user arrived via a ?incident= deep link, in which case don't steal their view.
+          setFlash(mapped.service + ' incident');
+          setTimeout(() => {
+            if (!deepLinkId) {
+              setSelected(mapped);
+              setView('incident');
+            }
+            setFlash(null);
+          }, 2000);
+        }
+      } catch (e) {
+        console.error("Error processing WS message", e);
+      }
+    };
+    ws.onclose = () => {
+      console.log("WebSocket disconnected, retrying in 5s...");
+    };
+    return () => ws.close();
+  }, []);
+
+  // 3. Dynamic Service Topology: Update node statuses live based on selected incident
+  useEffect(() => {
+    if (!window.TOPOLOGY_NODES) return;
+    if (!selected) {
+      // Default: restore INITIAL state statuses
+      const initialMap = {
+        gateway: 'healthy',
+        auth: 'degraded',
+        payments: 'critical',
+        user: 'healthy',
+        postgres: 'critical',
+        cache: 'healthy',
+        notif: 'degraded'
+      };
+      window.TOPOLOGY_NODES.forEach(n => {
+        n.status = initialMap[n.id] || 'healthy';
+      });
+      return;
+    }
+
+    // Active incident selected: highlight only affected nodes!
+    const affected = selected.affected_services || [];
+    const severity = (selected.severity || 'CRITICAL').toLowerCase();
+    window.TOPOLOGY_NODES.forEach(n => {
+      const isAffected = affected.some(s => s.toLowerCase().includes(n.id));
+      if (isAffected) {
+        n.status = severity;
+      } else if (n.id === 'postgres' && (affected.some(s => s.toLowerCase().includes('payments') || s.toLowerCase().includes('postgres')) || selected.rootCause && selected.rootCause.toLowerCase().includes('db'))) {
+        n.status = severity;
+      } else {
+        n.status = 'healthy';
+      }
+    });
+  }, [selected]);
+  function triggerChaos(scenario) {
+    setFlash(scenario.label);
+
+    // Trigger chaos endpoint on backend!
+    fetch(`${API_BASE}/api/chaos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        scenario: scenario.id === 'db-leak' ? 'db_connection_leak' : scenario.id === 'mem-leak' ? 'memory_leak' : scenario.id === 'latency-spike' ? 'network_latency_spike' : scenario.id === 'db-deadlock' ? 'database_deadlock' : 'api_cascade'
+      })
+    }).catch(err => {
+      console.error("Failed to trigger real chaos on backend, falling back to client-side emulation", err);
+    });
+    const newInc = createChaosIncident(scenario);
+    setTimeout(() => {
+      setIncidents(prev => [newInc, ...prev]);
+      setOrbMsg(`Critical incident detected on ${newInc.service}. Analyzing root cause now.`);
+    }, 900);
+    setTimeout(() => goIncident(newInc), 2300);
+    setTimeout(() => setFlash(null), 2700);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      height: '100vh',
+      overflow: 'hidden',
+      position: 'relative',
+      zIndex: 10
+    }
+  }, /*#__PURE__*/React.createElement(Sidebar, {
+    incidents: incidents,
+    view: view,
+    onNavigate: v => {
+      if (v === 'dashboard') setView('dashboard');
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(Header, {
+    incidents: incidents,
+    flash: flash
+  }), /*#__PURE__*/React.createElement("main", {
+    style: {
+      flex: 1,
+      overflow: 'hidden'
+    }
+  }, view === 'dashboard' ? /*#__PURE__*/React.createElement(Dashboard, {
+    incidents: incidents,
+    onAnalyze: goIncident,
+    onTrigger: triggerChaos
+  }) : /*#__PURE__*/React.createElement(IncidentDetail, {
+    incident: selected,
+    onBack: () => setView('dashboard'),
+    onSpeak: setOrbMsg
+  }))), /*#__PURE__*/React.createElement(VoiceOrb, {
+    externalMessage: orbMsg,
+    onExternalDone: () => setOrbMsg(null),
+    incidentId: selected?.id,
+    incidents: incidents
+  }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
+})();

@@ -110,6 +110,25 @@ def _format_logs(logs: List[dict]) -> str:
     return "\n".join(lines)
 
 
+def _live_feed_context(limit: int = 20) -> List[dict]:
+    """Compact snapshot of the incidents currently in the store, so the chat /
+    voice assistant can answer questions about the live dashboard feed even when
+    no single incident is selected."""
+    feed = []
+    for inc in incident_store.get_all_incidents()[:limit]:
+        rc = inc.get("root_cause") or {}
+        feed.append({
+            "incident_id": inc.get("incident_id"),
+            "severity": inc.get("severity"),
+            "status": inc.get("status"),
+            "affected_services": inc.get("affected_services"),
+            "root_cause": inc.get("root_cause_summary") or rc.get("root_cause"),
+            "confidence": inc.get("confidence"),
+            "timestamp": inc.get("timestamp"),
+        })
+    return feed
+
+
 def _sample_logs(logs: List[dict], cap: int = 300) -> List[dict]:
     if len(logs) <= cap:
         return logs
@@ -542,6 +561,12 @@ async def chat(req: ChatRequest):
                 "root_cause": incident.get("root_cause"),
             }
 
+    # Always ground the assistant in the current live incident feed. Prefer the
+    # exact snapshot the dashboard sent; otherwise reconstruct it from the store.
+    feed = req.live_incidents if req.live_incidents else _live_feed_context()
+    context["live_incident_feed"] = feed
+    context["live_incident_count"] = len(feed)
+
     try:
         answer = await answer_question(req.message, context)
     except Exception as exc:
@@ -610,7 +635,11 @@ async def voice_listen(ws: WebSocket):
                         action = "error"
                 else:
                     try:
-                        response_text = await answer_question(transcript, incident_context)
+                        # Ground spoken answers in the live feed too, so questions
+                        # like "which incidents are active?" work without a selection.
+                        ctx = dict(incident_context or {})
+                        ctx["live_incident_feed"] = _live_feed_context()
+                        response_text = await answer_question(transcript, ctx)
                         action = "answer"
                     except Exception as exc:
                         response_text = f"Could not answer: {exc}"

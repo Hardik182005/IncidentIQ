@@ -23,6 +23,10 @@ class SpeakRequest(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     incident_id: Optional[str] = None
+    # Compact snapshot of the incidents currently visible on the dashboard feed,
+    # sent by the voice orb so IQ-Sentry can answer "what's happening right now"
+    # even when no single incident is selected.
+    live_incidents: Optional[List[Dict[str, Any]]] = None
 
 
 class ChaosRequest(BaseModel):

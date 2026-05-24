@@ -28,6 +28,10 @@ backend/runtest.out
 backend/speak_test.bin
 incidentiq_logs/
 
+# ── Build tooling (Babel/Playwright deps — compiled JS output is committed) ─
+tools/node_modules/
+tools/package-lock.json
+
 # ── OS / editor ────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

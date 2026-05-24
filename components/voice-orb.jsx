@@ -17,7 +17,7 @@ const RESPONSES = [
 
 const CHIPS = ['What\'s the root cause?', 'How do I fix this?', 'Which service is affected?'];
 
-function VoiceOrb({ externalMessage, onExternalDone, incidentId }) {
+function VoiceOrb({ externalMessage, onExternalDone, incidentId, incidents }) {
   const [state, setState] = useState('idle');
   const [bars, setBars]   = useState([8, 8, 8, 8, 8]);
   const [transcript, setTranscript] = useState('');
@@ -91,10 +91,21 @@ function VoiceOrb({ externalMessage, onExternalDone, incidentId }) {
   }
 
   async function askBackend(question) {
+    // Snapshot of the live dashboard feed so IQ-Sentry answers about the
+    // incidents the operator can actually see, even with none selected.
+    const liveIncidents = (incidents || []).slice(0, 20).map(i => ({
+      incident_id: i.id,
+      severity: i.severity,
+      status: i.status,
+      affected_services: i.affected_services || i.tags || [],
+      root_cause: i.rootCause,
+      confidence: i.confidence,
+      timestamp: i.timestamp,
+    }));
     const res = await fetch(`${API_BASE}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: question, incident_id: incidentId || null }),
+      body: JSON.stringify({ message: question, incident_id: incidentId || null, live_incidents: liveIncidents }),
     });
     const data = await res.json();
     if (!res.ok || !data) throw new Error(data?.error || `HTTP ${res.status}`);

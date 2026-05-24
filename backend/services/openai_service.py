@@ -126,7 +126,12 @@ async def answer_question(question: str, context: dict) -> str:
                     "'Gujarati mein bolo'), honor it even if the question itself is in English.\n"
                     "5. Keep technical terms (service names, commands, metrics) in their original "
                     "form; translate only the explanatory prose.\n\n"
-                    f"Current incident context: {ctx_str[:4000]}"
+                    "The context below includes 'live_incident_feed' — the incidents currently "
+                    "showing on the operator's dashboard right now. When asked what's happening, "
+                    "which incidents are active/live, or for a status summary, answer from that "
+                    "feed (cite incident IDs, severities and affected services). If the feed is "
+                    "empty, say all systems are currently healthy with no active incidents.\n\n"
+                    f"Current incident context: {ctx_str[:8000]}"
                 ),
             },
             {"role": "user", "content": question},
