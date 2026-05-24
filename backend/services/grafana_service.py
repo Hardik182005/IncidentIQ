@@ -101,12 +101,18 @@ async def fetch_loki_logs(
     start_ns = end_ns - int(window_minutes * 60 * 1e9)
 
     url = f"{base}/loki/api/v1/query_range"
+    # Grafana Cloud Loki needs basic auth (instance id : token). Use it when the
+    # numeric Loki user is configured; otherwise fall back to the Bearer header.
+    loki_user = os.getenv("GRAFANA_LOKI_USER", "")
+    auth = (loki_user, os.getenv("GRAFANA_API_KEY", "")) if loki_user else None
+    headers = {"Accept": "application/json"} if loki_user else _headers()
     out: List[Dict[str, Any]] = []
     try:
         async with httpx.AsyncClient(timeout=20.0, verify=False) as client:
             r = await client.get(
                 url,
-                headers=_headers(),
+                headers=headers,
+                auth=auth,
                 params={
                     "query": query,
                     "start": str(start_ns),

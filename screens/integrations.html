@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IncidentIQ — Data Room</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#080810;--bg2:#0c0c1a;--bg3:#111128;--border:rgba(255,255,255,0.15);--border2:rgba(255,255,255,0.25);--text:#ffffff;--text2:#f1f5f9;--muted:#cbd5e1;--cyan:#06B6D4;--red:#EF4444;--green:#10B981;--amber:#F59E0B;--purple:#8B5CF6}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{
+      height:100%;background-color:var(--bg);
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.20) 1.5px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size:88px 88px,22px 22px,88px 88px,88px 88px;
+      color:var(--text);font-family:'Space Grotesk',sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;font-weight:500;
+    }
+    a{text-decoration:none;color:inherit}
+    ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:2px}
+    .app{display:flex;height:100vh;overflow:hidden}
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+    .sidebar{width:218px;flex-shrink:0;background:rgba(6,6,8,0.92);border-right:1px solid var(--border);display:flex;flex-direction:column}
+    .sb-top{padding:18px;border-bottom:1px solid var(--border)}
+    .sb-logo{display:flex;align-items:center;gap:10px}
+    .sq{width:32px;height:32px;background:linear-gradient(135deg,#ffffff,#64748b);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000;letter-spacing:-0.05em;flex-shrink:0;box-shadow:0 0 22px rgba(255,255,255,0.28)}
+    .brand{color:var(--text);font-weight:700;font-size:14px;letter-spacing:-0.02em;line-height:1.1}
+    .brand-s{color:var(--muted);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700}
+    .sb-nav{padding:10px 9px;flex:1}
+    .sb-lnk{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;color:var(--text2);font-size:13px;margin-bottom:2px;transition:all 0.14s;border:1px solid transparent;font-weight:600}
+    .sb-lnk:hover{background:rgba(255,255,255,0.048);color:var(--text)}
+    .sb-lnk.active{background:rgba(255,255,255,0.09);color:#fff;border-color:rgba(255,255,255,0.22);font-weight:700}
+    .sb-icon{width:16px;text-align:center;flex-shrink:0}
+    .sb-ws{padding:12px 16px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;font-weight:600;border-top:1px solid var(--border)}
+    .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:var(--green)}
+    .topbar{padding:9px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:24px;background:rgba(6,6,8,0.5);flex-shrink:0;min-height:52px}
+    .ts .tl{color:var(--muted);font-size:9px;letter-spacing:0.1em;margin-bottom:1px;font-weight:700}
+    .ts .tv{font-size:15px;font-weight:700;font-family:'JetBrains Mono',monospace}
+    .topbar-time{margin-left:auto;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700}
+    .content{flex:1;overflow-y:auto;padding:22px 24px}
+    .page-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px}
+    .page-title{font-size:22px;font-weight:700;letter-spacing:-0.03em}
+    .page-sub{font-size:13px;color:var(--text2);margin-top:2px;font-weight:600;max-width:560px}
+    .actions{display:flex;gap:10px}
+    .btn{border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all 0.15s;border:1px solid var(--border2)}
+    .btn.primary{background:#fff;color:#000;border-color:#fff}
+    .btn.primary:hover{background:#e2e8f0}
+    .btn.ghost{background:rgba(255,255,255,0.06);color:#fff}
+    .btn.ghost:hover{background:rgba(255,255,255,0.14)}
+    .btn:disabled{opacity:0.6;cursor:default}
+    .src-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+    .src-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+    .src-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .src-logo{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+    .src-name{font-size:15px;font-weight:700}
+    .src-stat{margin-left:auto;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;padding:2px 8px;border-radius:4px}
+    .src-stat.ok{background:rgba(16,185,129,0.12);color:var(--green);border:1px solid rgba(16,185,129,0.3)}
+    .src-stat.bad{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
+    .src-meta{font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;line-height:1.6}
+    .src-meta b{color:var(--text2)}
+    .src-link{display:inline-block;margin-top:10px;font-size:11.5px;color:#fff;border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-weight:700}
+    .src-link:hover{background:rgba(255,255,255,0.08)}
+    .feed{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .feed-head{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+    .feed-title{font-size:14px;font-weight:700}
+    .feed-badge{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:10px;padding:1px 9px;font-weight:700}
+    .feed-body{max-height:46vh;overflow-y:auto;padding:8px}
+    .rec{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.04);font-family:'JetBrains Mono',monospace;font-size:12px}
+    .rec:last-child{border-bottom:none}
+    .rec-src{flex-shrink:0;font-size:9.5px;font-weight:700;letter-spacing:0.04em;padding:2px 7px;border-radius:4px;text-transform:uppercase}
+    .rec-ts{flex-shrink:0;color:var(--muted);font-size:11px;width:78px}
+    .rec-sev{flex-shrink:0;font-weight:700;width:48px;font-size:11px}
+    .rec-svc{flex-shrink:0;color:var(--cyan);width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .rec-msg{color:var(--text2);line-height:1.45;word-break:break-word;flex:1;font-weight:500}
+    .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px;font-weight:600}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#0d0d18;border:1px solid var(--border2);border-radius:10px;padding:12px 22px;font-size:13.5px;font-weight:700;color:var(--text);box-shadow:0 14px 44px rgba(0,0,0,0.65);opacity:0;pointer-events:none;transition:all 0.25s;z-index:600}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    @keyframes breathe{0%,100%{opacity:.7}50%{opacity:1}}
+    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    .spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,0.25);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sb-top"><a href="../index.html" class="sb-logo"><div class="sq">IQ</div><div><div class="brand">IncidentIQ</div><div class="brand-s">SRE Command Center</div></div></a></div>
+    <nav class="sb-nav">
+      <a href="dashboard.html" class="sb-lnk"><span class="sb-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></span>Command Center</a>
+      <a href="incidents.html" class="sb-lnk"><span class="sb-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>Incidents</a>
+      <a href="metrics.html"   class="sb-lnk"><span class="sb-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>Metrics</a>
+      <a href="alerts.html"    class="sb-lnk"><span class="sb-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>Alerts</a>
+      <a href="runbooks.html"  class="sb-lnk"><span class="sb-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Runbooks</a>
+      <a href="integrations.html" class="sb-lnk active"><span class="sb-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg></span>Data Room</a>
+    </nav>
+    <div class="sb-ws"><span class="dot" style="animation:breathe 1.6s infinite"></span>Live ingest pipeline</div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="ts"><div class="tl">SOURCES LIVE</div><div class="tv" style="color:var(--green)" id="tb-live">–/3</div></div>
+      <div class="ts"><div class="tl">RECORDS PULLED</div><div class="tv" style="color:var(--cyan)" id="tb-records">0</div></div>
+      <div class="ts"><div class="tl">LAST PULL</div><div class="tv" style="color:var(--amber)" id="tb-last">never</div></div>
+      <div class="topbar-time" id="clock">--:--:-- IST</div>
+    </div>
+
+    <div class="content">
+      <div class="page-hd">
+        <div>
+          <div class="page-title">Data Room — Live Telemetry Ingest</div>
+          <div class="page-sub">Proof that IncidentIQ fetches real data from Datadog, Grafana Loki and New Relic. Seed demo telemetry into the providers, then pull it back here — every record shows its source tool.</div>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" id="seedBtn" onclick="seed()">⬆ Seed providers</button>
+          <button class="btn primary" id="pullBtn" onclick="pull()">⟳ Pull live data</button>
+        </div>
+      </div>
+
+      <div class="src-grid" id="src-grid"></div>
+
+      <div class="feed">
+        <div class="feed-head">
+          <span class="feed-title">Fetched records</span>
+          <span class="feed-badge" id="feed-count">0 records</span>
+          <span class="feed-badge" id="feed-hint" style="margin-left:auto">Click “Pull live data” to fetch from all three sources</span>
+        </div>
+        <div class="feed-body" id="feed-body"><div class="empty">No data pulled yet. Click <b>Seed providers</b> then <b>Pull live data</b>.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = (location.protocol.startsWith('http') && location.port !== '8080') ? '' : 'http://127.0.0.1:8000';
+const SRC = {
+  datadog:  { name:'Datadog',       color:'#632CA6', explorer:'https://app.us5.datadoghq.com/logs?query=source%3Aincidentiq-seed' },
+  grafana:  { name:'Grafana Loki',  color:'#F46800', explorer:'https://hardikhinduja399.grafana.net/explore' },
+  newrelic: { name:'New Relic',     color:'#00AC69', explorer:'https://one.newrelic.com/logger' },
+};
+const SRC_OF = { datadog:'datadog', 'datadog-event':'datadog', 'datadog-monitor':'datadog', 'grafana-loki':'grafana', 'grafana-alert':'grafana', 'newrelic-log':'newrelic', 'newrelic-incident':'newrelic' };
+const SEV_COL = { ERROR:'#EF4444', WARN:'#F59E0B', INFO:'#9aa0ad' };
+
+let toastT; const toastEl=document.getElementById('toast');
+function toast(m){toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),3200);}
+
+function renderStatus(status){
+  const grid=document.getElementById('src-grid'); let live=0;
+  grid.innerHTML=Object.keys(SRC).map(k=>{
+    const s=(status&&status[k])||{};
+    const ok=!!s.ok; if(ok) live++;
+    const meta = k==='newrelic' && s.user ? `user: ${s.user.name||s.user.email||'authenticated'}` : (s.status_code?`HTTP ${s.status_code}`:(s.error?String(s.error).slice(0,60):'—'));
+    return `<div class="src-card">
+      <div class="src-head"><span class="src-logo" style="background:${SRC[k].color}"></span><span class="src-name">${SRC[k].name}</span>
+        <span class="src-stat ${ok?'ok':'bad'}">${ok?'● CONNECTED':'● CHECK KEY'}</span></div>
+      <div class="src-meta"><b>auth:</b> ${ok?'authenticated':'not authenticated'}<br><b>detail:</b> ${meta}</div>
+      <a class="src-link" href="${SRC[k].explorer}" target="_blank" rel="noopener">Open ${SRC[k].name} console ↗</a>
+    </div>`;
+  }).join('');
+  document.getElementById('tb-live').textContent=live+'/3';
+}
+
+async function loadStatus(){
+  try{
+    const r=await fetch(`${API_BASE}/api/integrations/status`); const d=await r.json();
+    if(r.ok&&d&&d.success) renderStatus(d.data);
+  }catch(e){ console.error(e); }
+}
+
+async function seed(){
+  const b=document.getElementById('seedBtn'); const o=b.textContent; b.disabled=true; b.innerHTML='<span class="spin"></span>Seeding…';
+  try{
+    const r=await fetch(`${API_BASE}/api/integrations/seed`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const d=await r.json(); const s=(d&&d.data)||{}; const ok=[],bad=[];
+    ['datadog','grafana','newrelic'].forEach(k=>{ (s[k]&&s[k].ok?ok:bad).push(SRC[k].name); });
+    toast(ok.length?`Pushed to ${ok.join(', ')}${bad.length?` · ${bad.join(', ')} need ingest key`:''}`:'Seed failed — check provider keys');
+  }catch(e){ toast('Seed failed'); }
+  b.disabled=false; b.textContent=o;
+}
+
+async function pull(){
+  const b=document.getElementById('pullBtn'); const o=b.textContent; b.disabled=true; b.innerHTML='<span class="spin"></span>Pulling…';
+  try{
+    const r=await fetch(`${API_BASE}/api/integrations/sync`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({window_minutes:120,auto_analyze:false})});
+    const d=await r.json();
+    if(r.ok&&d&&d.success){ renderFeed(d.data); toast(`Pulled ${d.data.total_logs} records from live sources`); }
+    else toast('Pull failed');
+  }catch(e){ toast('Pull failed'); }
+  b.disabled=false; b.textContent=o;
+  document.getElementById('tb-last').textContent=new Date().toLocaleTimeString('en-US',{hour12:false,timeZone:'Asia/Kolkata'}).slice(0,5);
+}
+
+function renderFeed(data){
+  const records=data.records||{}; const counts=data.by_source_counts||{};
+  document.getElementById('tb-records').textContent=data.total_logs||0;
+  document.getElementById('feed-count').textContent=(data.total_logs||0)+' records';
+  document.getElementById('feed-hint').textContent=Object.entries(counts).map(([k,v])=>`${SRC[k]?SRC[k].name:k}: ${v}`).join('  ·  ');
+  const all=[];
+  Object.keys(records).forEach(provider=>{ (records[provider]||[]).forEach(rec=>all.push({provider,rec})); });
+  all.sort((a,b)=>String(b.rec.timestamp||'').localeCompare(String(a.rec.timestamp||'')));
+  const body=document.getElementById('feed-body');
+  if(!all.length){ body.innerHTML='<div class="empty">No records returned. Seed the providers first, or add the ingest keys for Grafana/New Relic (Datadog works out of the box).</div>'; return; }
+  body.innerHTML=all.map(({provider,rec})=>{
+    const prov=SRC_OF[rec.source]||provider; const meta=SRC[prov]||{name:prov,color:'#9aa0ad'};
+    const sev=(rec.severity||'INFO').toUpperCase(); const ts=String(rec.timestamp||'').split('T').pop().slice(0,8);
+    return `<div class="rec">
+      <span class="rec-src" style="background:${meta.color}22;color:${meta.color};border:1px solid ${meta.color}55">${meta.name}</span>
+      <span class="rec-ts">${ts}</span>
+      <span class="rec-sev" style="color:${SEV_COL[sev]||SEV_COL.INFO}">${sev}</span>
+      <span class="rec-svc">${rec.service||'—'}</span>
+      <span class="rec-msg">${(rec.message||'').replace(/</g,'&lt;')}</span>
+    </div>`;
+  }).join('');
+}
+
+loadStatus();
+setInterval(loadStatus,15000);
+setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false,timeZone:'Asia/Kolkata'})+' IST',1000);
+</script>
+</body>
+</html>

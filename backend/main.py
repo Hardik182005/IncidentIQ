@@ -828,6 +828,7 @@ async def integrations_sync(req: IntegrationSyncRequest):
     return _ok({
         "by_source_counts": {k: len(v) for k, v in by_source.items()},
         "total_logs": len(all_logs),
+        "records": {k: v[:60] for k, v in by_source.items()},
         "incident": incident,
     })
 
