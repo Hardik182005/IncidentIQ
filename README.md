@@ -32,11 +32,11 @@
 
 ## 🎯 Problem Statement
 
-> ### AI Incident Root Cause Analyzer for SRE Teams
->
-> **Problem:** During outages, engineers waste valuable time searching logs, dashboards, and alerts to identify the root cause.
->
-> **Build:** An AI agent that connects with monitoring tools like Datadog, Grafana, or New Relic, analyzes logs and incidents in real-time, identifies probable root causes, and suggests fixes instantly.
+<div style="background-color: #1e1e1e; color: white; padding: 20px; border-radius: 8px; margin: 15px 0; border: 1px solid #333;">
+  <h3 style="color: white; margin-top: 0;">3. AI Incident Root Cause Analyzer for SRE Teams</h3>
+  <p style="color: #e0e0e0;"><strong>Problem:</strong> During outages, engineers waste valuable time searching logs, dashboards, and alerts to identify the root cause.</p>
+  <p style="color: #e0e0e0; margin-bottom: 0;"><strong>Build:</strong> An AI agent that connects with monitoring tools like Datadog, Grafana, or New Relic, analyzes logs and incidents in real-time, identifies probable root causes, and suggests fixes instantly.</p>
+</div>
 
 ---
 
