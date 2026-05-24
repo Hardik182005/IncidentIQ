@@ -248,12 +248,12 @@
           <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:'12px'}}>
             {cmds.map((fix,idx) => (
               <div key={idx} style={{background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:'8px',overflow:'hidden'}}>
-                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 12px',background:'rgba(255,255,255,0.025)',borderBottom:'1px solid rgba(255,255,255,0.05)'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
-                    <span style={{background:`${riskCol[fix.risk]}12`,color:riskCol[fix.risk],border:`1px solid ${riskCol[fix.risk]}2e`,borderRadius:'3px',padding:'1px 6px',fontSize:'9px',fontFamily:"'JetBrains Mono',monospace",letterSpacing:'0.06em'}}>{fix.risk}</span>
-                    <span style={{color:'#9898b0',fontSize:'11px',fontWeight:'500'}}>{fix.title}</span>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'8px',padding:'9px 12px',background:'rgba(255,255,255,0.025)',borderBottom:'1px solid rgba(255,255,255,0.05)'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:'8px',flex:1,minWidth:0}}>
+                    <span style={{background:`${riskCol[fix.risk]}12`,color:riskCol[fix.risk],border:`1px solid ${riskCol[fix.risk]}2e`,borderRadius:'3px',padding:'2px 7px',fontSize:'9px',fontFamily:"'JetBrains Mono',monospace",letterSpacing:'0.06em',flexShrink:0,whiteSpace:'nowrap'}}>{fix.risk}</span>
+                    <span style={{color:'#9898b0',fontSize:'11px',fontWeight:'500',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',minWidth:0}}>{fix.title}</span>
                   </div>
-                  <button onClick={()=>copy(idx,fix.cmd)} style={{background:copied===idx?'rgba(16,185,129,0.14)':'rgba(255,255,255,0.06)',border:`1px solid ${copied===idx?'rgba(16,185,129,0.28)':'rgba(255,255,255,0.09)'}`,color:copied===idx?'#10B981':'#9898b0',borderRadius:'5px',padding:'3px 10px',fontSize:'10px',cursor:'pointer',fontFamily:"'Space Grotesk',sans-serif",transition:'all 0.2s'}}>{copied===idx?'✓ Copied':'Copy'}</button>
+                  <button onClick={()=>copy(idx,fix.cmd)} style={{flexShrink:0,whiteSpace:'nowrap',background:copied===idx?'rgba(16,185,129,0.14)':'rgba(255,255,255,0.06)',border:`1px solid ${copied===idx?'rgba(16,185,129,0.28)':'rgba(255,255,255,0.09)'}`,color:copied===idx?'#10B981':'#9898b0',borderRadius:'5px',padding:'3px 10px',fontSize:'10px',cursor:'pointer',fontFamily:"'Space Grotesk',sans-serif",transition:'all 0.2s'}}>{copied===idx?'✓ Copied':'Copy'}</button>
                 </div>
                 <pre style={{padding:'11px 13px',color:'#cbd5e1',fontSize:'11.5px',fontFamily:"'JetBrains Mono',monospace",lineHeight:'1.65',whiteSpace:'pre-wrap',wordBreak:'break-word',overflowWrap:'anywhere',margin:0}}><code>{fix.cmd}</code></pre>
               </div>
