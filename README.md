@@ -12,6 +12,8 @@
 
 ### 🔗 Live: **https://incidentiq-1099197368634.us-central1.run.app**
 
+### 💬 Watch alerts land in real time: **[Join the IncidentIQ Slack →](https://join.slack.com/t/incidentiq-world/shared_invite/zt-3yu7eu01h-cov54rryirD67XPYz97eOw)**
+
 <br>
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)

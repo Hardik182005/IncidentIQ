@@ -222,7 +222,8 @@
             <div class="ch-name">Slack</div>
             <div class="ch-status"><span class="dot" style="background:var(--green)"></span><span style="color:var(--green);font-size:12px">Connected</span></div>
             <div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:'JetBrains Mono',monospace">#incidents, #sre-alerts</div>
-            <button class="ch-btn">Configure</button>
+            <a class="ch-btn" href="https://join.slack.com/t/incidentiq-world/shared_invite/zt-3yu7eu01h-cov54rryirD67XPYz97eOw" target="_blank" rel="noopener" style="display:block;text-align:center;margin-top:12px;background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.32);color:#fff;font-weight:700">💬 Join Slack to see alerts →</a>
+            <button class="ch-btn" style="margin-top:6px">Configure</button>
           </div>
           <div class="channel-card">
             <div class="ch-icon">📟</div>
@@ -276,7 +277,7 @@ document.querySelectorAll('.alert-card .btn-xs.danger').forEach(btn=>{
 
 // Notification channel buttons — Configure saves; Connect prompts for an endpoint and marks Connected
 document.querySelectorAll('.channel-card').forEach(card=>{
-  const btn=card.querySelector('.ch-btn'); if(!btn) return;
+  const btn=card.querySelector('button.ch-btn'); if(!btn) return;
   const nameEl=card.querySelector('.ch-name');
   const name=nameEl?nameEl.textContent:'Channel';
   btn.addEventListener('click',()=>{
