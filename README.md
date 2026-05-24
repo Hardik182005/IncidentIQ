@@ -4,7 +4,7 @@
 
 ### The AI SRE that finds the root cause while you're still reading the alert.
 
-**Meet ARIA** — an autonomous Site-Reliability agent that plugs into Datadog, Grafana & New Relic, reads your live telemetry, runs a **three-model AI pipeline**, and hands you the root cause, an evidence trail, ready-to-run fix commands, a Slack alert, and a spoken briefing — in **under 15 seconds**.
+**Meet IQSentry** — an autonomous Site-Reliability agent that plugs into Datadog, Grafana & New Relic, reads your live telemetry, runs a **three-model AI pipeline**, and hands you the root cause, an evidence trail, ready-to-run fix commands, a Slack alert, and a spoken briefing — in **under 15 seconds**.
 
 <br>
 
@@ -34,7 +34,7 @@
 
 ### 🔗 **[Watch the IncidentIQ Live Demo on Google Drive →](https://drive.google.com/file/d/1gGgeCSzF4UzDQD-25KYLs2xA9g57eAZE/view?usp=sharing)**
 
-See ARIA in action: resolving simulated chaos outages, pulling live logs from Datadog, Grafana Loki & New Relic, posting deep-linked alerts to Slack, and speaking the root cause briefing in real-time.
+See IQSentry in action: resolving simulated chaos outages, pulling live logs from Datadog, Grafana Loki & New Relic, posting deep-linked alerts to Slack, and speaking the root cause briefing in real-time.
 
 ---
 
@@ -43,8 +43,8 @@ See ARIA in action: resolving simulated chaos outages, pulling live logs from Da
 1. **Open the live app →** [https://incidentiq-1099197368634.us-central1.run.app](https://incidentiq-1099197368634.us-central1.run.app)
 2. **Join the Slack** (optional but worth it) → [IncidentIQ Slack](https://join.slack.com/t/incidentiq-world/shared_invite/zt-3yu7eu01h-cov54rryirD67XPYz97eOw) — so you can watch the alert land in real time.
 3. **Go to the Command Center** (`Dashboard`) and hit **⚡ Trigger Chaos** — pick a scenario like `database_deadlock`.
-4. **Watch ARIA work** — in ~15s you get the root cause, a real confidence score, blast radius, a causal timeline, and copy-paste fix commands. The service topology degrades live and a Slack alert fires with deep-link buttons.
-5. **Click the voice orb** 🎙️ and ask *"what's the root cause?"* — ARIA briefs you out loud (try it in Hindi, Marathi, Tamil, Gujarati… too).
+4. **Watch IQSentry work** — in ~15s you get the root cause, a real confidence score, blast radius, a causal timeline, and copy-paste fix commands. The service topology degrades live and a Slack alert fires with deep-link buttons.
+5. **Click the voice orb** 🎙️ and ask *"what's the root cause?"* — IQSentry briefs you out loud (try it in Hindi, Marathi, Tamil, Gujarati… too).
 6. **Open the Data Room** (`/screens/integrations.html`) → click **Seed providers**, then **Pull live data** to see real records stream back from Datadog, Grafana Loki & New Relic — each tagged by source.
 
 > Prefer the terminal? Skip the UI and hit the live API directly — see **[Judge it in 30 seconds](#️-judge-it-in-30-seconds-no-setup--hits-the-live-deployment)** below.
@@ -103,7 +103,7 @@ Step 3 returns a full incident — **severity, real confidence, probable trigger
 
 ```
    LIVE TELEMETRY INGEST                    ┌──────────────────────────────┐
-   ┌──────────┬──────────┬──────────┐       │   ARIA — 3-Model AI Pipeline │
+   ┌──────────┬──────────┬──────────┐       │ IQSentry — 3-Model Pipeline  │
    │ Datadog  │ Grafana  │ New Relic│  ───▶  │                              │
    └──────────┴──────────┴──────────┘       │  ① Groq    →  Triage  (<2s)  │
         official APIs · real logs           │  ② Gemini  →  Correlation    │

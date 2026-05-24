@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
-logger = logging.getLogger("aria.datadog")
+logger = logging.getLogger("iqsentry.datadog")
 
 
 def _site() -> str:

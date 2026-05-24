@@ -7,7 +7,7 @@ from typing import Any, Dict
 
 from groq import AsyncGroq
 
-logger = logging.getLogger("aria.groq")
+logger = logging.getLogger("iqsentry.groq")
 
 GROQ_TRIAGE_PROMPT = """
 You are an SRE on-call. Analyze these logs and return ONLY valid JSON, no markdown:

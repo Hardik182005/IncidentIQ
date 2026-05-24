@@ -5,7 +5,7 @@ from typing import Iterator
 from elevenlabs.client import ElevenLabs
 from elevenlabs import VoiceSettings
 
-logger = logging.getLogger("aria.elevenlabs")
+logger = logging.getLogger("iqsentry.elevenlabs")
 
 VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
 MODEL_ID = "eleven_turbo_v2_5"

@@ -4,7 +4,7 @@ import os
 import re
 from typing import Any, Dict, List
 
-logger = logging.getLogger("aria.gemini")
+logger = logging.getLogger("iqsentry.gemini")
 
 GEMINI_CORRELATION_PROMPT = """
 You are a distributed systems expert. Find correlations between anomalies and logs. Return ONLY valid JSON:

@@ -5,7 +5,7 @@ from typing import Any, Dict
 
 from openai import AsyncOpenAI
 
-logger = logging.getLogger("aria.openai")
+logger = logging.getLogger("iqsentry.openai")
 
 OPENAI_ROOTCAUSE_PROMPT = """
 You are the world's best SRE. Return ONLY valid JSON, no markdown, no backticks:

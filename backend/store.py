@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import WebSocket
 
-logger = logging.getLogger("aria.store")
+logger = logging.getLogger("iqsentry.store")
 
 
 class WebSocketManager:

@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 import aiohttp
 
-logger = logging.getLogger("aria.slack")
+logger = logging.getLogger("iqsentry.slack")
 
 _SEVERITY_EMOJI = {
     "critical": ":red_circle:",

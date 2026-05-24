@@ -7,7 +7,7 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 from services import datadog_service, grafana_service, newrelic_service
 
-logger = logging.getLogger("aria.agent")
+logger = logging.getLogger("iqsentry.agent")
 
 
 def _fingerprint(log: dict) -> str:

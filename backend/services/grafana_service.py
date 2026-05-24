@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 
 import httpx
 
-logger = logging.getLogger("aria.grafana")
+logger = logging.getLogger("iqsentry.grafana")
 
 
 def _base_url() -> str:

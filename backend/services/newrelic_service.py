@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 
 import httpx
 
-logger = logging.getLogger("aria.newrelic")
+logger = logging.getLogger("iqsentry.newrelic")
 
 NERDGRAPH_URL = "https://api.newrelic.com/graphql"
 NERDGRAPH_URL_EU = "https://api.eu.newrelic.com/graphql"
