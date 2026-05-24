@@ -32,19 +32,9 @@
 
 ## 🎬 Demo Video
 
-<div align="center">
-  <a href="https://drive.google.com/file/d/1gGgeCSzF4UzDQD-25KYLs2xA9g57eAZE/view?usp=sharing" target="_blank" style="text-decoration: none;">
-    <div style="background: linear-gradient(135deg, #1e1e30 0%, #0d0d15 100%); border: 1px solid #3b3b4f; border-radius: 12px; padding: 30px; max-width: 800px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); text-align: center; transition: transform 0.3s ease, border-color 0.3s ease; cursor: pointer; margin: 20px 0;">
-      <div style="font-size: 64px; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(66, 133, 244, 0.4));">🎬</div>
-      <h3 style="color: #ffffff; margin: 0 0 10px 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 24px; font-weight: 600;">Watch the IncidentIQ Live Demo</h3>
-      <p style="color: #a0a0c0; margin: 0 0 20px 0; font-size: 15px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px; line-height: 1.6;">See ARIA in action: resolving simulated chaos outages, pulling live logs from Datadog, Grafana Loki & New Relic, posting deep-linked alerts to Slack, and speaking the root cause briefing in real-time.</p>
-      <div style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; background-color: #4285F4; color: #ffffff; padding: 12px 24px; border-radius: 30px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-decoration: none; box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3); transition: background-color 0.2s;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 5px;"><path d="M8 5v14l11-7z"/></svg>
-        Play Demo Video (Google Drive)
-      </div>
-    </div>
-  </a>
-</div>
+### 🔗 **[Watch the IncidentIQ Live Demo on Google Drive →](https://drive.google.com/file/d/1gGgeCSzF4UzDQD-25KYLs2xA9g57eAZE/view?usp=sharing)**
+
+See ARIA in action: resolving simulated chaos outages, pulling live logs from Datadog, Grafana Loki & New Relic, posting deep-linked alerts to Slack, and speaking the root cause briefing in real-time.
 
 ---
 
