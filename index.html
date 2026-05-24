@@ -224,6 +224,7 @@
   <span class="ingest-src"><span class="src-dot" style="background:#632CA6"></span>Datadog</span>
   <span class="ingest-src"><span class="src-dot" style="background:#F46800"></span>Grafana Loki</span>
   <span class="ingest-src"><span class="src-dot" style="background:#00AC69"></span>New Relic</span>
+  <button id="seedBtn" onclick="seedProviders()" style="background:rgba(255,255,255,0.06);border:1px solid var(--border-bright);color:#fff;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.14)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">⬆ Push demo telemetry</button>
   <span class="ingest-note">IncidentIQ pulls live logs, metrics &amp; firing alerts from Datadog, Grafana Loki and New Relic via their official APIs — then runs the 3-model AI pipeline on the real data.</span>
 </div>
 
@@ -344,6 +345,23 @@
 </footer>
 
 <script>
+/* ── SEED DEMO TELEMETRY into Datadog / Grafana / New Relic ─────────────── */
+function seedProviders(){
+  const b=document.getElementById('seedBtn'); if(!b) return;
+  const orig=b.textContent; b.textContent='Pushing…'; b.disabled=true;
+  fetch('/api/integrations/seed',{method:'POST'})
+    .then(r=>r.json())
+    .then(d=>{
+      const s=(d&&d.data)||{}; const ok=[],need=[];
+      ['datadog','grafana','newrelic'].forEach(k=>{ if(s[k]&&s[k].ok) ok.push(k); else need.push(k); });
+      b.textContent = ok.length
+        ? ('✓ Pushed → '+ok.join(', ')+(need.length?(' · '+need.join('/')+' need ingest key'):''))
+        : '✗ Push failed (check keys)';
+      setTimeout(()=>{b.textContent=orig;b.disabled=false;},7000);
+    })
+    .catch(()=>{ b.textContent='✗ Failed'; setTimeout(()=>{b.textContent=orig;b.disabled=false;},4000); });
+}
+
 /* ── HERO CANVAS: ANIMATED INCIDENT FLOWCHART ───────────────────────────── */
 (function(){
   const canvas = document.getElementById('hero-canvas');

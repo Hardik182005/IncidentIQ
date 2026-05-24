@@ -138,6 +138,60 @@ async def fetch_loki_logs(
     return out
 
 
+def _demo_lines() -> List[Dict[str, str]]:
+    return [
+        {"service": "payments-api", "level": "error", "line": "sqlalchemy.exc.TimeoutError: QueuePool limit reached on payments_db, connection timed out after 5s"},
+        {"service": "postgres-primary", "level": "error", "line": "FATAL: remaining connection slots are reserved for superuser connections"},
+        {"service": "postgres-primary", "level": "warn", "line": "deadlock detected: process 4821 waits for ShareLock on transaction 99213"},
+        {"service": "gateway-api", "level": "error", "line": "upstream connect error 503 from payments-api; circuit breaker open"},
+        {"service": "auth-service", "level": "warn", "line": "JWT validation latency p99=842ms after cert rotation"},
+        {"service": "order-service", "level": "error", "line": "retry storm to payments-api: 1240 retries/min, backoff saturated"},
+    ]
+
+
+async def push_demo_logs(repeat: int = 3) -> Dict[str, Any]:
+    """Push demo logs to Grafana Cloud Loki so they show in Explore → Loki.
+
+    Grafana Cloud Loki push needs basic-auth (numeric instance id : access-policy
+    token with logs:write). If GRAFANA_LOKI_USER is set we use it; otherwise we try
+    the service-account token as a Bearer (works on some self-hosted setups)."""
+    base = _loki_url() or _base_url()
+    token = os.getenv("GRAFANA_API_KEY", "")
+    if not base or not token:
+        return {"ok": False, "error": "GRAFANA_LOKI_URL/GRAFANA_API_KEY not set"}
+
+    now_ns = int(datetime.now(timezone.utc).timestamp() * 1e9)
+    lines = _demo_lines() * max(1, repeat)
+    # Group by (service, level) into Loki streams
+    streams: Dict[tuple, Dict[str, Any]] = {}
+    for i, l in enumerate(lines):
+        key = (l["service"], l["level"])
+        streams.setdefault(key, {"stream": {"service": l["service"], "level": l["level"], "env": "demo", "source": "incidentiq-seed"}, "values": []})
+        streams[key]["values"].append([str(now_ns + i * 1_000_000), l["line"]])
+    body = {"streams": list(streams.values())}
+
+    url = f"{base}/loki/api/v1/push"
+    loki_user = os.getenv("GRAFANA_LOKI_USER", "")
+    headers = {"Content-Type": "application/json"}
+    auth = None
+    if loki_user:
+        auth = (loki_user, token)
+    else:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        async with httpx.AsyncClient(timeout=20.0, verify=False) as client:
+            r = await client.post(url, json=body, headers=headers, auth=auth)
+            ok = r.status_code in (200, 204)
+            return {
+                "ok": ok,
+                "status_code": r.status_code,
+                "count": len(lines),
+                "error": None if ok else (r.text[:200] + " — set GRAFANA_LOKI_USER (numeric instance id) + a logs:write token to enable Loki push"),
+            }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 async def fetch_all(window_minutes: int = 10) -> List[Dict[str, Any]]:
     import asyncio
     alerts, loki = await asyncio.gather(

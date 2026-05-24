@@ -754,6 +754,27 @@ async def integrations_status():
     })
 
 
+@app.post("/api/integrations/seed")
+async def integrations_seed():
+    """Push realistic demo error logs INTO Datadog, Grafana Loki and New Relic so
+    their own dashboards light up live during a demo — proving IncidentIQ ingests
+    from real third-party tools. Returns per-provider push results."""
+    results = await asyncio.gather(
+        datadog_service.push_demo_logs(),
+        grafana_service.push_demo_logs(),
+        newrelic_service.push_demo_logs(),
+        return_exceptions=True,
+    )
+    def _r(x):
+        return x if not isinstance(x, Exception) else {"ok": False, "error": str(x)}
+    return _ok({
+        "datadog": _r(results[0]),
+        "grafana": _r(results[1]),
+        "newrelic": _r(results[2]),
+        "note": "Open each provider's UI to show the seeded logs, then POST /api/integrations/sync to pull them back into IncidentIQ.",
+    })
+
+
 @app.post("/api/integrations/sync")
 async def integrations_sync(req: IntegrationSyncRequest):
     """One-shot pull from all (or selected) providers. Optionally auto-analyze."""

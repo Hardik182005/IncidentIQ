@@ -168,6 +168,57 @@ async def fetch_nrql_logs(
     return out
 
 
+def _demo_lines() -> List[Dict[str, str]]:
+    return [
+        {"service": "payments-api", "level": "ERROR", "message": "sqlalchemy.exc.TimeoutError: QueuePool limit reached on payments_db"},
+        {"service": "postgres-primary", "level": "ERROR", "message": "FATAL: remaining connection slots are reserved for superuser connections"},
+        {"service": "postgres-primary", "level": "WARN", "message": "deadlock detected: process 4821 waits for ShareLock on transaction 99213"},
+        {"service": "gateway-api", "level": "ERROR", "message": "upstream connect error 503 from payments-api; circuit breaker open"},
+        {"service": "auth-service", "level": "WARN", "message": "JWT validation latency p99=842ms after cert rotation"},
+        {"service": "order-service", "level": "ERROR", "message": "retry storm to payments-api: 1240 retries/min"},
+    ]
+
+
+def _log_api_url() -> str:
+    return "https://log-api.eu.newrelic.com/log/v1" if os.getenv("NEW_RELIC_REGION", "US").upper() == "EU" else "https://log-api.newrelic.com/log/v1"
+
+
+async def push_demo_logs(repeat: int = 3) -> Dict[str, Any]:
+    """Push demo logs to the New Relic Log API so they appear in Logs UI.
+
+    The Log API needs an INGEST/LICENSE key (not the NRAK user key). Uses
+    NEW_RELIC_LICENSE_KEY / NEW_RELIC_INGEST_KEY if present, else falls back to
+    NEW_RELIC_API_KEY (which will 403 if it's a user key)."""
+    key = os.getenv("NEW_RELIC_LICENSE_KEY") or os.getenv("NEW_RELIC_INGEST_KEY") or os.getenv("NEW_RELIC_API_KEY", "")
+    if not key:
+        return {"ok": False, "error": "No New Relic key set"}
+
+    now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    lines = _demo_lines() * max(1, repeat)
+    logs = [
+        {
+            "timestamp": now_ms + i * 100,
+            "message": l["message"],
+            "attributes": {"service": l["service"], "level": l["level"], "logtype": "incidentiq-seed", "env": "demo"},
+        }
+        for i, l in enumerate(lines)
+    ]
+    body = [{"common": {"attributes": {"source": "incidentiq-seed"}}, "logs": logs}]
+    headers = {"Api-Key": key, "Content-Type": "application/json"}
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            r = await client.post(_log_api_url(), json=body, headers=headers)
+            ok = r.status_code in (200, 202)
+            return {
+                "ok": ok,
+                "status_code": r.status_code,
+                "count": len(logs),
+                "error": None if ok else (r.text[:160] + " — set NEW_RELIC_LICENSE_KEY (an ingest/license key, not the NRAK user key) to enable log push"),
+            }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 async def fetch_all(window_minutes: int = 10) -> List[Dict[str, Any]]:
     import asyncio
     incidents, logs = await asyncio.gather(

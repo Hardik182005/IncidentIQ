@@ -170,6 +170,55 @@ async def fetch_events(window_minutes: int = 10) -> List[Dict[str, Any]]:
     return out
 
 
+def _demo_lines() -> List[Dict[str, str]]:
+    return [
+        {"service": "payments-api", "status": "error", "message": "psycopg2.OperationalError: connection pool exhausted (200/200 in use) on payments_db"},
+        {"service": "payments-api", "status": "error", "message": "sqlalchemy.exc.TimeoutError: QueuePool limit of size 200 overflow 10 reached, connection timed out"},
+        {"service": "postgres-primary", "status": "error", "message": "FATAL: remaining connection slots are reserved for non-replication superuser connections"},
+        {"service": "postgres-primary", "status": "warn", "message": "deadlock detected: process 4821 waits for ShareLock on transaction 99213; blocked by process 4830"},
+        {"service": "auth-service", "status": "warn", "message": "JWT validation latency p99=842ms (threshold 300ms) after cert rotation"},
+        {"service": "gateway-api", "status": "error", "message": "upstream connect error: 503 from payments-api, circuit breaker tripping"},
+        {"service": "order-service", "status": "error", "message": "retry storm: 1240 retries/min to payments-api, exponential backoff saturated"},
+        {"service": "redis-cache", "status": "warn", "message": "evicted 4821 keys under maxmemory pressure, hit ratio dropped to 71%"},
+    ]
+
+
+async def push_demo_logs(repeat: int = 3) -> Dict[str, Any]:
+    """Push realistic demo error logs to Datadog Logs intake so they appear in the
+    Datadog Logs Explorer (and can then be pulled back by /api/integrations/sync)."""
+    api_key = os.getenv("DATADOG_API_KEY", "")
+    if not api_key:
+        return {"ok": False, "error": "DATADOG_API_KEY not set"}
+
+    lines = _demo_lines() * max(1, repeat)
+    payload = [
+        {
+            "ddsource": "incidentiq",
+            "service": l["service"],
+            "hostname": f"{l['service']}-prod-1",
+            "status": l["status"],
+            "message": l["message"],
+            "ddtags": f"env:demo,team:sre,service:{l['service']},source:incidentiq-seed",
+        }
+        for l in lines
+    ]
+    url = f"https://http-intake.logs.{_site()}/api/v2/logs"
+    headers = {"DD-API-KEY": api_key, "Content-Type": "application/json"}
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            r = await client.post(url, json=payload, headers=headers)
+            ok = r.status_code in (200, 202)
+            return {
+                "ok": ok,
+                "status_code": r.status_code,
+                "count": len(payload),
+                "explorer": f"https://app.{_site()}/logs?query=source%3Aincidentiq-seed",
+                "error": None if ok else r.text[:200],
+            }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+
 async def fetch_all(window_minutes: int = 10) -> List[Dict[str, Any]]:
     import asyncio
     logs, monitors, events = await asyncio.gather(
