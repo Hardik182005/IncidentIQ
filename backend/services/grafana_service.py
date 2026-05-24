@@ -104,7 +104,8 @@ async def fetch_loki_logs(
     # Grafana Cloud Loki needs basic auth (instance id : token). Use it when the
     # numeric Loki user is configured; otherwise fall back to the Bearer header.
     loki_user = os.getenv("GRAFANA_LOKI_USER", "")
-    auth = (loki_user, os.getenv("GRAFANA_API_KEY", "")) if loki_user else None
+    loki_token = os.getenv("GRAFANA_LOKI_TOKEN") or os.getenv("GRAFANA_API_KEY", "")
+    auth = (loki_user, loki_token) if loki_user else None
     headers = {"Accept": "application/json"} if loki_user else _headers()
     out: List[Dict[str, Any]] = []
     try:
@@ -162,7 +163,7 @@ async def push_demo_logs(repeat: int = 3) -> Dict[str, Any]:
     token with logs:write). If GRAFANA_LOKI_USER is set we use it; otherwise we try
     the service-account token as a Bearer (works on some self-hosted setups)."""
     base = _loki_url() or _base_url()
-    token = os.getenv("GRAFANA_API_KEY", "")
+    token = os.getenv("GRAFANA_LOKI_TOKEN") or os.getenv("GRAFANA_API_KEY", "")
     if not base or not token:
         return {"ok": False, "error": "GRAFANA_LOKI_URL/GRAFANA_API_KEY not set"}
 
